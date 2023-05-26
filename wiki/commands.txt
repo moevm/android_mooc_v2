@@ -1,0 +1,24 @@
+Эмулятор:
+получение списка эмуляторов: (из папки <Путь до Android SDK>/emulator) ./emulator -list-avds
+
+запуск эмулятора: (из папки <Путь до Android SDK>/emulator) ./emulator -avd <название эмулятора>
+
+отправка файлов на эмулятор: adb push <путь к файлу в компьютере> <место назначения, например /sdcard/Download>
+получение файлов из эмулятора: adb pull <путь к файлу на устройстве> <место назначения>
+
+Приложение:
+сборка приложения:
+ ./gradlew :app:assembleDebug
+ ./gradlew :app:assembleRelease
+Итоговые apk файлы сохраняются в <Папка проекта>/app/build/outputs/apk, далее выбор debug или release
+
+установка приложения: (при включённом эмуляторе)
+adb install <Папка проекта>/app/build/outputs/apk/<выбор варианта apk>
+
+удаление приложения: (при включённом эмуляторе)
+adb uninstall <package приложения>
+
+Тестирование:
+UnitTest`ы: ./gradlew app:testDebugUnitTest
+InstrumentalTest`ы: ./gradlew app:connectedDebugAndroidTest
+
