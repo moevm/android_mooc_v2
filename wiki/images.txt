@@ -1,0 +1,8 @@
+Основной:
+https://hub.docker.com/r/mobiledevops/android-sdk-image
+Простой sdk с нужными зависимостями. Содержит в себе SDK для API 30 и 33.
+Был взят за основу и доработан с добавления суперпользователя для sudo.
+
+Дополнительные:
+https://hub.docker.com/r/circleci/android
+https://hub.docker.com/r/cimg/android
