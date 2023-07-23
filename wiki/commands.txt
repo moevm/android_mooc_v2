@@ -1,4 +1,6 @@
 Эмулятор:
+создать эмулятор: (из папки <Путь до Android SDK>) /tools/bin/avdmanager create avd -n my_new_emulator -k "system-images;android-29;google_apis;x86"
+
 получение списка эмуляторов: (из папки <Путь до Android SDK>/emulator) ./emulator -list-avds
 
 запуск эмулятора: (из папки <Путь до Android SDK>/emulator) ./emulator -avd <название эмулятора>
