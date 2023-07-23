@@ -1,3 +1,4 @@
+#!/bin/bash
 # Sudo password
 password=root
 
