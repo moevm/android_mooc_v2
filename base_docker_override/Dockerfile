@@ -7,6 +7,7 @@ ENV ANDROID_SDK_TOOLS_CHECKSUM bd1aa17c7ef10066949c88dc6c9c8d536be27f992a1f3b5a5
 
 ENV ANDROID_HOME "/opt/android-sdk-linux"
 ENV ANDROID_SDK_ROOT $ANDROID_HOME
+ENV ANDROID_AVD_HOME $ANDROID_HOME/.android/avd
 ENV PATH $PATH:$ANDROID_HOME/cmdline-tools:$ANDROID_HOME/cmdline-tools/bin:$ANDROID_HOME/platform-tools
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -31,8 +32,14 @@ RUN apt-get -qq update \
     curl \
     lldb \
     git > /dev/null \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    vim
    
+# Add virtualization for emulator
+RUN apt-get install -y qemu-kvm libvirt-clients libvirt-daemon-system bridge-utils
+
+# Clean cache
+RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 # Download and unzip Android SDK Tools
 RUN curl -s https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_TOOLS_VERSION}_latest.zip > /tools.zip \
     && echo "$ANDROID_SDK_TOOLS_CHECKSUM ./tools.zip" | sha256sum -c \
@@ -50,6 +57,8 @@ RUN groupadd -r mobiledevops \
     && useradd --no-log-init -r -g mobiledevops mobiledevops \
     && echo "mobiledevops:root" | chpasswd \
     && adduser mobiledevops sudo \
+    && adduser mobiledevops libvirt \
+    && adduser mobiledevops kvm \
     && mkdir -p /home/mobiledevops/.android \
     && mkdir -p /home/mobiledevops/app \
     && touch /home/mobiledevops/.android/repositories.cfg \
