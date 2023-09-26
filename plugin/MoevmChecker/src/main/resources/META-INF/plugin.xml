@@ -23,6 +23,7 @@
   <!-- Extension points defined by the plugin.
        Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
   <extensions defaultExtensionNs="com.intellij">
+    <toolWindow factoryClass="ru.mse.moevm_checker.core.ui.MainToolWindow" id="DemoPlugin"/>
 
   </extensions>
 </idea-plugin>
