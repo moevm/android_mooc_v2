@@ -1,5 +1,5 @@
 Эмулятор:
-создать эмулятор: (из папки <Путь до Android SDK>) /tools/bin/avdmanager create avd -n my_new_emulator -k "system-images;android-29;google_apis;x86"
+создать эмулятор: (из папки <Путь до Android SDK>) ./cmdline-tools/latest/bin/avdmanager create avd -n my_new_emulator -k "system-images;android-29;google_apis;x86"
 
 получение списка эмуляторов: (из папки <Путь до Android SDK>/emulator) ./emulator -list-avds
 
@@ -24,3 +24,15 @@ adb uninstall <package приложения>
 UnitTest`ы: ./gradlew app:testDebugUnitTest
 InstrumentalTest`ы: ./gradlew app:connectedDebugAndroidTest
 
+
+
+Запуск с поддержкой виртуализации:
+docker run -it --privileged my-android-sdk-image
+
+Скачивание образа Android:
+$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "system-images;android-29;google_apis;x86"
+Перед запуском задать путь $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager, latest будет содержать первоначальные данные cmdline-tools
+
+Запуск эмулятора в консоли (лучше выносить в сторонний процесс): ./emulator/emulator -avd my_new_emulator -no-window
+
+Получение списка активных эмуляторов (из $SDK$/cmdline-tools/latest/bin): ./avdmanager list avd
