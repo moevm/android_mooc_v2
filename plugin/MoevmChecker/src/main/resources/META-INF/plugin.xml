@@ -1,0 +1,29 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+  <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+  <id>ru.mse.moevm_checker</id>
+
+  <!-- Public plugin name should be written in Title Case.
+       Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+  <name>Moevm Checker</name>
+
+  <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+  <!-- TODO Написать email, если нужно -->
+  <vendor email="helloworld@yandex.ru" url="https://etu.ru/">HelloWorld</vendor>
+
+  <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+       Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
+       Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+  <description><![CDATA[ There is nothing here :( ]]></description>
+
+  <!-- Product and plugin compatibility requirements.
+       Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+  <depends>com.intellij.modules.platform</depends>
+
+  <!-- Extension points defined by the plugin.
+       Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+  <extensions defaultExtensionNs="com.intellij">
+    <toolWindow factoryClass="ru.mse.moevm_checker.core.ui.MainToolWindow" id="DemoPlugin"/>
+
+  </extensions>
+</idea-plugin>
