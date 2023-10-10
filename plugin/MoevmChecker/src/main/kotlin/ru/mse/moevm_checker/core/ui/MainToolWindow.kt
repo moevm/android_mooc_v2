@@ -4,11 +4,10 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
-import com.intellij.ui.components.DialogPanel
 import com.intellij.ui.content.ContentFactory
-import kotlinx.coroutines.flow.onEach
 import ru.mse.moevm_checker.core.di.DepsInjector
-import ru.mse.moevm_checker.core.ui.splashWindow.SplashWindow
+import ru.mse.moevm_checker.core.ui.coursesWindow.CoursesWindow
+import ru.mse.moevm_checker.core.ui.data.DialogPanelData
 
 class MainToolWindow : ToolWindowFactory {
 
@@ -19,16 +18,27 @@ class MainToolWindow : ToolWindowFactory {
 
     // вызывается при первом открытии окна плагина
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
+        // FIXME: Что делать, если path == null? 
+        DepsInjector.projectEnvironmentInfo.init(project.guessProjectDir()?.path ?: "error")
+
         println("mylog MainToolWindow project is ${project.guessProjectDir()}")
-        val coursesInfoValidator = DepsInjector.provideCoursesInfoValidatorForFile()
-        coursesInfoValidator.updateIsValidFileState(project.guessProjectDir()?.path ?: "")
+        val dialogPanelData: DialogPanelData? = if (isValidMainFile() || !isValidTaskFile()) {
+            CoursesWindow(project.guessProjectDir()?.path ?: "").getWindowContent().getDialogPanel()
+        } else {
+            // TODO: Окно выполнения задания
+            null
+        }
 
-        coursesInfoValidator.isValidPlaceState
-        toolWindow.contentManager.addContent(ContentFactory.getInstance().createContent(SplashWindow(project.guessProjectDir()?.path ?: "").getContent(), "MyPanel", false))
+        toolWindow.contentManager.addContent(ContentFactory.getInstance().createContent(dialogPanelData?.dialogPanel, dialogPanelData?.panelName, false))
     }
 
-    private fun handleValidFileState() {
-
+    private fun isValidMainFile(): Boolean {
+        val validator = DepsInjector.provideCourseFileValidator()
+        return validator.isMainCoursesFileValid()
     }
 
+    private fun isValidTaskFile(): Boolean {
+        val validator = DepsInjector.provideCourseFileValidator()
+        return validator.isTaskFileValid()
+    }
 }
