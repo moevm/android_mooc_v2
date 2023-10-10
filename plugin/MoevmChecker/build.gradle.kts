@@ -21,6 +21,8 @@ intellij {
 }
 
 tasks {
+  buildSearchableOptions.get().enabled = false
+
   // Set the JVM compatibility versions
   withType<JavaCompile> {
     sourceCompatibility = "17"
@@ -31,7 +33,7 @@ tasks {
   }
 
   patchPluginXml {
-    sinceBuild.set("223.*")
+    sinceBuild.set("223")
     untilBuild.set("232.*")
   }
 
