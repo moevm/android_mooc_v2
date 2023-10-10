@@ -15,7 +15,6 @@ class CoursesFileValidatorImpl(
         if (!file.exists() || !file.canRead()) {
             return false
         }
-        // TODO: Проверить содержимое файла?
         return coursesInfoReader.readCourseInfo(file) != null
     }
 

@@ -1,6 +1,7 @@
 package ru.mse.moevm_checker.core.di
 
 import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
 import ru.mse.moevm_checker.core.file_system.reader.CoursesInfoReader
 import ru.mse.moevm_checker.core.file_system.reader.JsonCoursesInfoReaderImpl
 import ru.mse.moevm_checker.core.file_system.repository.CoursesFileValidator
@@ -14,6 +15,8 @@ import ru.mse.moevm_checker.utils.ProjectEnvironmentInfo
 object DepsInjector {
     val projectEnvironmentInfo
         get() = ProjectEnvironmentInfo
+
+    fun provideIoDispatcher() = Dispatchers.IO
 
     fun provideFileDownloader(): FileDownloader {
         return FileDownloaderImpl()
