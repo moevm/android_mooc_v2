@@ -1,7 +1,8 @@
 package ru.mse.moevm_checker.core.di
 
 import com.google.gson.Gson
-import kotlinx.coroutines.Dispatchers
+import ru.mse.moevm_checker.core.common.CoroutineDispatchers
+import ru.mse.moevm_checker.core.common.CoroutineDispatchersImpl
 import ru.mse.moevm_checker.core.file_system.reader.CoursesInfoReader
 import ru.mse.moevm_checker.core.file_system.reader.JsonCoursesInfoReaderImpl
 import ru.mse.moevm_checker.core.file_system.repository.CoursesFileValidator
@@ -16,7 +17,9 @@ object DepsInjector {
     val projectEnvironmentInfo
         get() = ProjectEnvironmentInfo
 
-    fun provideIoDispatcher() = Dispatchers.IO
+    private val coroutineDispatchers = CoroutineDispatchersImpl()
+
+    fun provideDispatcher(): CoroutineDispatchers = coroutineDispatchers
 
     fun provideFileDownloader(): FileDownloader {
         return FileDownloaderImpl()
@@ -32,12 +35,10 @@ object DepsInjector {
     }
 
     fun provideCoursesInfoRepository(
-        fileDownloader: FileDownloader = provideFileDownloader(),
-        coursesInfoReader: CoursesInfoReader
+        coursesInfoReader: CoursesInfoReader = provideCoursesInfoReader()
     ): CoursesInfoRepository {
         return CoursesInfoRepositoryImpl(
             projectEnvironmentInfo.rootDir,
-            fileDownloader,
             coursesInfoReader
         )
     }

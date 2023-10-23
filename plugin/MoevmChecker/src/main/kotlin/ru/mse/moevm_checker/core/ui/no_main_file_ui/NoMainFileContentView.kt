@@ -1,6 +1,8 @@
-package ru.mse.moevm_checker.core.ui.no_main_file
+package ru.mse.moevm_checker.core.ui.no_main_file_ui
 
 interface NoMainFileContentView {
+
+    val presenter: NoMainFilePresenter
 
     fun refreshUiState(
         isMainFileNotFoundLabelVisible: Boolean,

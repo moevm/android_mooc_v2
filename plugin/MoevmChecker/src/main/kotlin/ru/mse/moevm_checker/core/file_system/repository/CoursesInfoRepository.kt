@@ -1,12 +1,10 @@
 package ru.mse.moevm_checker.core.file_system.repository
 
-import kotlinx.coroutines.flow.StateFlow
-import ru.mse.moevm_checker.core.file_system.data.CoursesInfoState
+import kotlinx.coroutines.flow.Flow
+import ru.mse.moevm_checker.core.data.CoursesInfo
 
 interface CoursesInfoRepository {
-    val coursesInfoState: StateFlow<CoursesInfoState?>
+    fun isCourseInfoAvailable(coursesInfoState: CoursesInfo?): Boolean
 
-    fun isCourseInfoAvailable(): Boolean
-
-    fun invalidateCourseInfoState(): StateFlow<CoursesInfoState?>
+    fun invalidateCourseInfoState(): Flow<CoursesInfo?>
 }

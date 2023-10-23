@@ -1,4 +1,4 @@
-package ru.mse.moevm_checker.core.ui.no_main_file
+package ru.mse.moevm_checker.core.ui.no_main_file_ui
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -13,7 +13,7 @@ class NoMainFilePresenterImpl(
     mainFileName: String,
     projectPath: String,
     private val coursesFileValidator: CoursesFileValidator = DepsInjector.provideCourseFileValidator(),
-    private val ioDispatcher: CoroutineDispatcher = DepsInjector.provideIoDispatcher()
+    private val ioDispatcher: CoroutineDispatcher = DepsInjector.provideDispatcher().worker
 ) : NoMainFilePresenter {
     override val noMainFileModel: NoMainFileModel = NoMainFileModelImpl(
         this,

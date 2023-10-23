@@ -1,4 +1,4 @@
-package ru.mse.moevm_checker.core.ui.no_main_file
+package ru.mse.moevm_checker.core.ui.no_main_file_ui
 
 import com.intellij.ui.AnimatedIcon
 import com.intellij.ui.dsl.builder.Align
@@ -10,7 +10,7 @@ import ru.mse.moevm_checker.core.ui.data.DialogPanelData
 import ru.mse.moevm_checker.utils.ResStr
 import javax.swing.JButton
 
-class NoMainFileContent(
+class NoMainFileContentViewImpl(
     projectPath: String,
 ) : BaseContent, NoMainFileContentView {
     /*  UI Components   */
@@ -20,7 +20,7 @@ class NoMainFileContent(
     private lateinit var mainFileNotFoundRow: Row
     private lateinit var refreshButton: Cell<JButton>
 
-    private val presenter = NoMainFilePresenterImpl(
+    override val presenter = NoMainFilePresenterImpl(
         this,
         ResStr.getString("dataMainCourseFileName"),
         projectPath

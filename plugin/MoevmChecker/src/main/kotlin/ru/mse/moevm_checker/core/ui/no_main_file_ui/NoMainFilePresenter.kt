@@ -1,4 +1,4 @@
-package ru.mse.moevm_checker.core.ui.no_main_file
+package ru.mse.moevm_checker.core.ui.no_main_file_ui
 
 interface NoMainFilePresenter {
     val noMainFileModel: NoMainFileModel
@@ -7,5 +7,6 @@ interface NoMainFilePresenter {
     fun onDownloadMainFileClick()
 
     fun onRefreshViewClick()
+
     fun isMainCoursesFileValid(): Boolean
 }

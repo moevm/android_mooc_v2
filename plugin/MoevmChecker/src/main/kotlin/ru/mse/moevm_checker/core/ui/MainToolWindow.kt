@@ -6,7 +6,7 @@ import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.ContentFactory
 import ru.mse.moevm_checker.core.di.DepsInjector
-import ru.mse.moevm_checker.core.ui.coursesWindow.CoursesWindow
+import ru.mse.moevm_checker.core.ui.courses_ui.CoursesWindow
 import ru.mse.moevm_checker.core.ui.data.DialogPanelData
 
 class MainToolWindow : ToolWindowFactory {
