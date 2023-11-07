@@ -1,0 +1,21 @@
+{
+  "version": "0.1",
+  "courses": [
+    {
+      "id": "1",
+      "name": "MainCourse",
+      "version": "0.1",
+      "course_description": "https://drive.google.com/uc?export=download&id=1NpzvwRUblmL5t8XY3yGbJOw8JtH_gUFD",
+      "tasks": [
+        {
+          "id": "1",
+          "name": "FirstTask",
+          "version": "0.1",
+          "type": "code_task",
+          "archive_url": "https://drive.google.com/uc?export=download&id=1nJnvMNFQReg-DSmWGR653Vj-6G120z6l",
+          "task_description": "https://drive.google.com/uc?export=download&id=1cXsu8r5k4q1BHN5oEvbhUCPOCk5CDsLf"
+        }
+      ]
+    }
+  ]
+}
