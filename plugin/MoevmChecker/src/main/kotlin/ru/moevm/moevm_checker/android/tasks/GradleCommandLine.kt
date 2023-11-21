@@ -8,7 +8,6 @@ import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.io.FileUtil
 import ru.moevm.moevm_checker.android.tasks.GradleConstants.GRADLE_WRAPPER_UNIX
 import ru.moevm.moevm_checker.android.tasks.GradleConstants.GRADLE_WRAPPER_WIN
-import ru.moevm.moevm_checker.core.check.CheckUtils
 import java.util.concurrent.ExecutionException
 
 class GradleCommandLine(
@@ -28,15 +27,15 @@ class GradleCommandLine(
         val stderr = output.stderr
         val stdout = output.stdout
         if (stderr.isNotEmpty() && output.stdout.isEmpty()) {
-            return GradleOutput(false, listOf(stderr), stdout, stderr)
+            return GradleOutput(false, listOf("Failed!!!"), stdout, stderr)
         }
 
         if (GradleStderrAnalyzer.tryToGetCheckResult(stderr) != null) {
-            return GradleOutput(false, CheckUtils.ERRORS + listOf(output.stderr), stdout, stderr)
+            return GradleOutput(false, listOf("Failed!!!"), stdout, stderr)
         }
 
         if (!output.stdout.contains(taskName)) {
-            return GradleOutput(false, listOf("Gradle task failed", stderr, output.stdout), stdout, stderr)
+            return GradleOutput(false, listOf("Failed!!!"), stdout, stderr)
         }
 
         return GradleOutput(true, listOf("Passed!!!"), stdout, stderr)
