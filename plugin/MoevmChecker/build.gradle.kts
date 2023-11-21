@@ -17,7 +17,7 @@ intellij {
   version.set("2023.1.1.16")
   type.set("AI") // Target IDE Platform
 
-  plugins.set(listOf(/* Plugin Dependencies */))
+  plugins.set(listOf("android"))
 }
 
 tasks {

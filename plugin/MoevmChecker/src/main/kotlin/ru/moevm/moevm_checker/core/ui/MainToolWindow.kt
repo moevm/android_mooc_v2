@@ -8,6 +8,7 @@ import com.intellij.ui.content.ContentFactory
 import ru.moevm.moevm_checker.core.di.DepsInjector
 import ru.moevm.moevm_checker.core.ui.courses_ui.CoursesWindow
 import ru.moevm.moevm_checker.core.ui.data.DialogPanelData
+import ru.moevm.moevm_checker.core.ui.task_ui.TaskViewImpl
 
 class MainToolWindow : ToolWindowFactory {
 
@@ -22,14 +23,14 @@ class MainToolWindow : ToolWindowFactory {
         DepsInjector.projectEnvironmentInfo.init(project.guessProjectDir()?.path ?: "error")
 
         println("mylog MainToolWindow project is ${project.guessProjectDir()}")
-        val dialogPanelData: DialogPanelData? = if (isValidMainFile() || !isValidTaskFile()) {
+
+        val dialogPanelData: DialogPanelData = if (false/*isValidMainFile() || !isValidTaskFile()*/) {
             CoursesWindow(project.guessProjectDir()?.path ?: "").getWindowContent().getDialogPanel()
         } else {
-            // TODO: Окно выполнения задания
-            null
+            TaskViewImpl(project).getDialogPanel()
         }
 
-        toolWindow.contentManager.addContent(ContentFactory.getInstance().createContent(dialogPanelData?.dialogPanel, dialogPanelData?.panelName, false))
+        toolWindow.contentManager.addContent(ContentFactory.getInstance().createContent(dialogPanelData.dialogPanel, dialogPanelData.panelName, false))
     }
 
     private fun isValidMainFile(): Boolean {
