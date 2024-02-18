@@ -24,17 +24,16 @@ class GradleCommandLine(
 
         val stderr = output.stderr
         val stdout = output.stdout
-        if (isTaskFailed(stderr, output, stdout)) {
+        if (!isTaskPassed(stderr, output)) {
             return GradleOutput(false, listOf("Failed!!!"), stdout, stderr)
         }
 
         return GradleOutput(true, listOf("Passed!!!"), stdout, stderr)
     }
 
-    private fun isTaskFailed(
+    private fun isTaskPassed(
         stderr: String,
-        output: ProcessOutput,
-        stdout: String
+        output: ProcessOutput
     ): Boolean {
         return when {
             stderr.isNotEmpty() && output.stdout.isEmpty() -> false
