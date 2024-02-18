@@ -1,31 +1,22 @@
 package ru.moevm.moevm_checker.core.ui.courses_ui.courses_tree
 
-import ru.moevm.moevm_checker.utils.ResStr
 import javax.swing.JMenuItem
 import javax.swing.JPopupMenu
 
 class CoursesTreeViewNodeMenu(
-    taskType: String, // TODO: Заменить на Enum
-    onOpenTaskClick: () -> Unit,
-    onDownloadTaskClick: () -> Unit,
-    onRemoveTaskFilesClick: () -> Unit
+    popupActions: List<PopupAction>
 ) : JPopupMenu() {
-    private val openTask = JMenuItem(ResStr.getString("CoursesTreePopupMenuOpenTask"))
-    private val downloadTask = JMenuItem(ResStr.getString("CoursesTreePopupMenuDownloadTask"))
-    private val removeTaskFiles = JMenuItem(ResStr.getString("CoursesTreePopupMenuRemoveTaskFiles"))
+    private val menuItems = popupActions.map { (title, action) ->
+        JMenuItem(title).apply {
+            addActionListener {
+                action()
+            }
+        }
+    }
 
     init {
-        openTask.addActionListener {
-            onOpenTaskClick()
+        menuItems.forEach { item ->
+            add(item)
         }
-        downloadTask.addActionListener {
-            onDownloadTaskClick()
-        }
-        removeTaskFiles.addActionListener {
-            onRemoveTaskFilesClick()
-        }
-        add(openTask)
-        add(downloadTask)
-        add(removeTaskFiles)
     }
 }

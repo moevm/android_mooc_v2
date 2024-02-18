@@ -11,14 +11,12 @@ import ru.moevm.moevm_checker.core.file_system.repository.CoursesFileValidator
 class NoMainFilePresenterImpl(
     override val noMainFileContentView: NoMainFileContentView,
     mainFileName: String,
-    projectPath: String,
     private val coursesFileValidator: CoursesFileValidator = DepsInjector.provideCourseFileValidator(),
     private val ioDispatcher: CoroutineDispatcher = DepsInjector.provideDispatcher().worker
 ) : NoMainFilePresenter {
     override val noMainFileModel: NoMainFileModel = NoMainFileModelImpl(
         this,
-        mainFileName,
-        projectPath
+        mainFileName
     )
 
     override fun onDownloadMainFileClick() {
@@ -41,9 +39,9 @@ class NoMainFilePresenterImpl(
         val isMainFileNotFoundLabelVisible = (status is FileDownloadingStatus.Failed)
         val isLoadingMainCoursesFileInProgressVisible = (status == FileDownloadingStatus.Downloading)
         val isLoadingMainCoursesFileFailedVisible = (status is FileDownloadingStatus.Failed
-            || (status is FileDownloadingStatus.Success && !coursesFileValidator.isMainCoursesFileValid()))
+                || (status is FileDownloadingStatus.Success && !coursesFileValidator.isMainCoursesFileValid()))
         val isLoadingMainCoursesFileSuccessVisible = (status is FileDownloadingStatus.Success
-            && coursesFileValidator.isMainCoursesFileValid())
+                && coursesFileValidator.isMainCoursesFileValid())
         val isRefreshButtonVisible = (status is FileDownloadingStatus.Success)
 
         noMainFileContentView.refreshUiState(

@@ -27,7 +27,8 @@ class CoursesPresenterImpl(
                         CourseVO(
                             course.id,
                             course.name,
-                            course.tasks
+                            course.courseTaskPlatform,
+                            course.courseTasks
                                 .map { task ->
                                     TaskVO(task.id, task.name, task.type)
                                 }

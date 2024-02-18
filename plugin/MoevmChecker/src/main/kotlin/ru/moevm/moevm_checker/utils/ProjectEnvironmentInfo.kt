@@ -1,11 +1,14 @@
 package ru.moevm.moevm_checker.utils
 
-object ProjectEnvironmentInfo {
+class ProjectEnvironmentInfo {
     lateinit var rootDir: String
+    lateinit var jdkPath: String
 
     fun init(
-        rootDir: String
+        rootDir: String,
+        jdkPath: String
     ) {
         this.rootDir = rootDir
+        this.jdkPath = jdkPath
     }
 }

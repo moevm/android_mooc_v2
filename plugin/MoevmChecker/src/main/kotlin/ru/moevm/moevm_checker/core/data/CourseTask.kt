@@ -3,7 +3,7 @@ package ru.moevm.moevm_checker.core.data
 
 import com.google.gson.annotations.SerializedName
 
-data class Task(
+data class CourseTask(
     @SerializedName("archive_url")
     val archiveUrl: String,
     @SerializedName("id")

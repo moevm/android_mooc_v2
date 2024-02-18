@@ -11,13 +11,15 @@ import ru.moevm.moevm_checker.core.file_system.repository.CoursesInfoRepository
 import ru.moevm.moevm_checker.core.file_system.repository.CoursesInfoRepositoryImpl
 import ru.moevm.moevm_checker.core.network.FileDownloader
 import ru.moevm.moevm_checker.core.network.FileDownloaderImpl
+import ru.moevm.moevm_checker.core.task.TaskBuilder
+import ru.moevm.moevm_checker.core.task.TaskManager
 import ru.moevm.moevm_checker.utils.ProjectEnvironmentInfo
 
 object DepsInjector {
-    val projectEnvironmentInfo
-        get() = ProjectEnvironmentInfo
+    val projectEnvironmentInfo = ProjectEnvironmentInfo()
 
     private val coroutineDispatchers = CoroutineDispatchersImpl()
+    private val taskManager = TaskManager(provideCoursesInfoRepository(), provideTaskBuilder())
 
     fun provideDispatcher(): CoroutineDispatchers = coroutineDispatchers
 
@@ -29,7 +31,7 @@ object DepsInjector {
         coursesInfoReader: CoursesInfoReader = provideCoursesInfoReader(),
     ): CoursesFileValidator {
         return CoursesFileValidatorImpl(
-            projectEnvironmentInfo.rootDir,
+            projectEnvironmentInfo,
             coursesInfoReader
         )
     }
@@ -38,7 +40,7 @@ object DepsInjector {
         coursesInfoReader: CoursesInfoReader = provideCoursesInfoReader()
     ): CoursesInfoRepository {
         return CoursesInfoRepositoryImpl(
-            projectEnvironmentInfo.rootDir,
+            projectEnvironmentInfo,
             coursesInfoReader
         )
     }
@@ -51,5 +53,13 @@ object DepsInjector {
 
     private fun provideGson(): Gson {
         return Gson()
+    }
+
+    private fun provideTaskBuilder(): TaskBuilder {
+        return TaskBuilder()
+    }
+
+    fun provideTaskManager(): TaskManager {
+        return taskManager
     }
 }

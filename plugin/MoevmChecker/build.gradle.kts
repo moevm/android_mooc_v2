@@ -1,56 +1,56 @@
 plugins {
-  id("java")
-  id("org.jetbrains.kotlin.jvm") version "1.8.21"
-  id("org.jetbrains.intellij") version "1.13.3"
+    id("java")
+    id("org.jetbrains.kotlin.jvm") version "1.9.21"
+    id("org.jetbrains.intellij") version "1.16.1"
 }
 
 group = "ru.moevm"
 version = "1.0-SNAPSHOT"
 
 repositories {
-  mavenCentral()
+    mavenCentral()
 }
 
 // Configure Gradle IntelliJ Plugin
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
 intellij {
-  version.set("2023.1.1.16")
-  type.set("AI") // Target IDE Platform
+    version.set("2023.1.1.16")
+    type.set("AI") // Target IDE Platform
 
-  plugins.set(listOf("android"))
+    plugins.set(listOf("android"))
 }
 
 tasks {
-  buildSearchableOptions.get().enabled = false
+    buildSearchableOptions.get().enabled = false
 
-  // Set the JVM compatibility versions
-  withType<JavaCompile> {
-    sourceCompatibility = "17"
-    targetCompatibility = "17"
-  }
-  withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions.jvmTarget = "17"
-  }
+    // Set the JVM compatibility versions
+    withType<JavaCompile> {
+        sourceCompatibility = "17"
+        targetCompatibility = "17"
+    }
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions.jvmTarget = "17"
+    }
 
-  patchPluginXml {
-    sinceBuild.set("223")
-    untilBuild.set("232.*")
-  }
+    patchPluginXml {
+        sinceBuild.set("223")
+        untilBuild.set("232.*")
+    }
 
-  signPlugin {
-    certificateChain.set(System.getenv("CERTIFICATE_CHAIN"))
-    privateKey.set(System.getenv("PRIVATE_KEY"))
-    password.set(System.getenv("PRIVATE_KEY_PASSWORD"))
-  }
+    signPlugin {
+        certificateChain.set(System.getenv("CERTIFICATE_CHAIN"))
+        privateKey.set(System.getenv("PRIVATE_KEY"))
+        password.set(System.getenv("PRIVATE_KEY_PASSWORD"))
+    }
 
-  publishPlugin {
-    token.set(System.getenv("PUBLISH_TOKEN"))
-  }
+    publishPlugin {
+        token.set(System.getenv("PUBLISH_TOKEN"))
+    }
 }
 dependencies {
-  implementation(kotlin("stdlib-jdk8"))
-  implementation("com.google.code.gson:gson:2.8.9")
-  implementation("com.mikepenz:multiplatform-markdown-renderer:0.6.1")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.3.2")
-  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
+    implementation(kotlin("stdlib-jdk8"))
+    implementation("com.google.code.gson:gson:2.8.9")
+    implementation("com.mikepenz:multiplatform-markdown-renderer:0.6.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.3.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
 }

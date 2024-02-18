@@ -6,12 +6,14 @@ import com.google.gson.annotations.SerializedName
 data class Course(
     @SerializedName("course_description")
     val courseDescription: String,
+    @SerializedName("course_task_platform")
+    val courseTaskPlatform: String,
     @SerializedName("id")
     val id: String,
     @SerializedName("name")
     val name: String,
     @SerializedName("tasks")
-    val tasks: List<Task>,
+    val courseTasks: List<CourseTask>,
     @SerializedName("version")
     val version: String
 )
