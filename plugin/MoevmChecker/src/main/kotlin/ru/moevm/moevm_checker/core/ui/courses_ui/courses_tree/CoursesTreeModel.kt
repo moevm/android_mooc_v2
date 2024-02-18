@@ -7,7 +7,7 @@ class CoursesTreeModel(
     root: CoursesTreeNode
 ) : DefaultTreeModel(root) {
 
-    fun updateRoot(courses: List<CourseVO>) {
+    fun rebuildTree(courses: List<CourseVO>) {
         val newNodes = CoursesTreeNode.buildTreeWithNodes(courses)
         this.setRoot(newNodes)
     }

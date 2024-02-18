@@ -5,13 +5,13 @@ import ru.moevm.moevm_checker.core.ui.BaseContent
 import ru.moevm.moevm_checker.core.ui.BaseWindow
 import ru.moevm.moevm_checker.core.ui.no_main_file_ui.NoMainFileContentViewImpl
 
-class CoursesWindow(private val projectPath: String) : BaseWindow {
+class CoursesWindow : BaseWindow {
     override fun getWindowContent(): BaseContent {
         val validator = DepsInjector.provideCourseFileValidator()
         return if (!validator.isMainCoursesFileValid()) {
-            NoMainFileContentViewImpl(projectPath)
+            NoMainFileContentViewImpl()
         } else {
-            CoursesContentViewImpl(projectPath)
+            CoursesContentViewImpl()
         }
     }
 }

@@ -9,7 +9,7 @@ object GradleStderrAnalyzer {
     fun tryToGetCheckResult(stderr: String): CheckResult? {
         for (error in CheckUtils.ERRORS) {
             if (error in stderr) {
-                return CheckResult(CheckStatus.Failed)
+                return CheckResult(CheckStatus.Failed(stderr))
             }
         }
         return null

@@ -11,7 +11,6 @@ import ru.moevm.moevm_checker.utils.ResStr
 import javax.swing.JButton
 
 class NoMainFileContentViewImpl(
-    projectPath: String,
 ) : BaseContent, NoMainFileContentView {
     /*  UI Components   */
     private lateinit var loadingProgressRow: Row
@@ -22,8 +21,7 @@ class NoMainFileContentViewImpl(
 
     override val presenter = NoMainFilePresenterImpl(
         this,
-        ResStr.getString("dataMainCourseFileName"),
-        projectPath
+        ResStr.getString("dataMainCourseFileName")
     )
 
     override fun getDialogPanel(): DialogPanelData {
@@ -74,7 +72,13 @@ class NoMainFileContentViewImpl(
         }.align(Align.CENTER)
     }
 
-    override fun refreshUiState(isMainFileNotFoundLabelVisible: Boolean, isLoadingMainCoursesFileInProgressVisible: Boolean, isLoadingMainCoursesFileFailedVisible: Boolean, isLoadingMainCoursesFileSuccessVisible: Boolean, isRefreshButtonVisible: Boolean) {
+    override fun refreshUiState(
+        isMainFileNotFoundLabelVisible: Boolean,
+        isLoadingMainCoursesFileInProgressVisible: Boolean,
+        isLoadingMainCoursesFileFailedVisible: Boolean,
+        isLoadingMainCoursesFileSuccessVisible: Boolean,
+        isRefreshButtonVisible: Boolean
+    ) {
         mainFileNotFoundRow.visible(isMainFileNotFoundLabelVisible)
         loadingProgressRow.visible(isLoadingMainCoursesFileInProgressVisible)
         loadingFailedRow.visible(isLoadingMainCoursesFileFailedVisible)

@@ -8,9 +8,9 @@ import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreeNode
 
 class CoursesTreeNode(
-    private val id: String,
+    val nodeId: String,
     val title: String,
-    private val type: String,
+    val coursesItemType: CoursesItemType,
     private val isLeaf: Boolean
 ) : DefaultMutableTreeNode() {
 
@@ -55,7 +55,7 @@ class CoursesTreeNode(
             val root = CoursesTreeNode(
                 "-1",
                 ResStr.getString("CoursesTreeCoursesHub"),
-                "root",
+                CoursesItemType.UNKNOWN,
                 treeItems.isEmpty()
             )
             val children = treeItems.map { courseVO -> fromCourseVO(courseVO, root) }
@@ -69,7 +69,7 @@ class CoursesTreeNode(
             val result = CoursesTreeNode(
                 courseVO.courseId,
                 courseVO.courseName,
-                "course", // FIXME: Заменить на enum
+                CoursesItemType.COURSE,
                 courseVO.courseTasks.isEmpty()
             )
             val children = courseVO.courseTasks.map { taskVO -> fromTaskVO(taskVO, result) }
@@ -84,10 +84,18 @@ class CoursesTreeNode(
             return CoursesTreeNode(
                 taskVO.taskId,
                 taskVO.taskName,
-                taskVO.taskType,
+                getCoursesItemType(taskVO.taskType),
                 true
             ).apply {
                 this.parent = parent
+            }
+        }
+
+        private fun getCoursesItemType(taskType: String): CoursesItemType {
+            return when (taskType) {
+                CoursesItemType.COURSE.type -> CoursesItemType.COURSE
+                CoursesItemType.CODE_TASK.type -> CoursesItemType.CODE_TASK
+                else -> CoursesItemType.UNKNOWN
             }
         }
     }
