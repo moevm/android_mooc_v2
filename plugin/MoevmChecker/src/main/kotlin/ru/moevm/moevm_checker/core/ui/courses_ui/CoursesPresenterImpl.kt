@@ -1,9 +1,5 @@
 package ru.moevm.moevm_checker.core.ui.courses_ui
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import ru.moevm.moevm_checker.core.common.CoroutineDispatchers
 import ru.moevm.moevm_checker.core.di.DepsInjector
 import ru.moevm.moevm_checker.core.ui.courses_ui.data.CourseVO
@@ -20,26 +16,18 @@ class CoursesPresenterImpl(
     }
 
     override fun onRefreshCoursesInfo() {
-        CoroutineScope(dispatchers.worker).launch {
-            coursesModel.forceInvalidateCoursesInfo()
-                .map { courseInfo ->
-                    courseInfo.courses.map { course ->
-                        CourseVO(
-                            course.id,
-                            course.name,
-                            course.courseTaskPlatform,
-                            course.courseTasks
-                                .map { task ->
-                                    TaskVO(task.id, task.name, task.type)
-                                }
-                        )
+        // TODO Переделать на flow
+        val coursesInfo = coursesModel.forceInvalidateCoursesInfo()
+        val courses = coursesInfo.courses.map { course ->
+            CourseVO(
+                course.id,
+                course.name,
+                course.courseTasks
+                    .map { task ->
+                        TaskVO(task.id, task.name, task.type)
                     }
-                }
-                .collect { courses ->
-                    withContext(dispatchers.ui) {
-                        coursesContentView.refreshUiState(courses)
-                    }
-                }
+            )
         }
+        coursesContentView.refreshUiState(courses)
     }
 }

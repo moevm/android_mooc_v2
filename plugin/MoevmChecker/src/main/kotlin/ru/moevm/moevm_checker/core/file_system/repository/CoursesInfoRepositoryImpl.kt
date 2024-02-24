@@ -1,7 +1,5 @@
 package ru.moevm.moevm_checker.core.file_system.repository
 
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import ru.moevm.moevm_checker.core.data.CoursesInfo
 import ru.moevm.moevm_checker.core.file_system.reader.CoursesInfoReader
 import ru.moevm.moevm_checker.utils.ProjectEnvironmentInfo
@@ -14,11 +12,9 @@ class CoursesInfoRepositoryImpl(
 ) : CoursesInfoRepository {
     private val mainCourseFileName = ResStr.getString("dataMainCourseFileName")
 
-    override fun invalidateCourseInfoState(): Flow<CoursesInfo?> {
-        return flow {
-            val file = File(projectEnvironmentInfo.rootDir, mainCourseFileName)
-            val coursesInfo = coursesInfoReader.readCourseInfo(file)
-            emit(coursesInfo)
-        }
+    override fun invalidateCourseInfoState(): CoursesInfo? {
+        val file = File(projectEnvironmentInfo.rootDir, mainCourseFileName)
+        val coursesInfo = coursesInfoReader.readCourseInfo(file)
+        return coursesInfo
     }
 }
