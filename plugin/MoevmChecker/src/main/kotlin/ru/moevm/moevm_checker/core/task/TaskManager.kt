@@ -1,6 +1,5 @@
 package ru.moevm.moevm_checker.core.task
 
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.runBlocking
 import ru.moevm.moevm_checker.core.check.CheckResult
 import ru.moevm.moevm_checker.core.data.Course
@@ -15,7 +14,7 @@ class TaskManager(
 
     fun setCurrentTask(taskId: String) {
         runBlocking { // FIXME: Заменить runBlocking на что-нибудь получше
-            val courses = coursesInfoRepository.invalidateCourseInfoState().last()?.courses ?: return@runBlocking
+            val courses = coursesInfoRepository.invalidateCourseInfoState()?.courses ?: return@runBlocking
             var selectedTask: CourseTask? = null
             var selectedCourse: Course? = null
             for (course in courses) {
@@ -28,8 +27,9 @@ class TaskManager(
             if (selectedTask == null) {
                 throw IllegalStateException("Cannot find task with taskId!")
             }
+
             currentTask = taskBuilder.buildTask(
-                taskPlatformType = getTaskPlatformType(selectedCourse?.courseTaskPlatform),
+                taskPlatformType = getTaskPlatformType(selectedTask.courseTaskPlatform),
                 taskId = selectedTask.id,
                 courseName = selectedCourse?.id ?: "",
                 taskName = selectedTask.id

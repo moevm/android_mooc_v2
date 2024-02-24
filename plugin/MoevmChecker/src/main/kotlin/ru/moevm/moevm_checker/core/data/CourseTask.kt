@@ -8,6 +8,8 @@ data class CourseTask(
     val archiveUrl: String,
     @SerializedName("id")
     val id: String,
+    @SerializedName("course_task_platform")
+    val courseTaskPlatform: String?,
     @SerializedName("name")
     val name: String,
     @SerializedName("task_description")
