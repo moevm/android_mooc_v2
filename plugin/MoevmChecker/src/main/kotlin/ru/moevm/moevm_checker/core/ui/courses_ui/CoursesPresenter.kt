@@ -7,4 +7,10 @@ interface CoursesPresenter {
     fun onCoursesContentViewCreated()
 
     fun onRefreshCoursesInfo()
+
+    fun onOpenTaskClick(taskId: String)
+
+    fun onDownloadTaskClick(taskId: String)
+
+    fun onRemoveTaskClick(taskId: String)
 }
