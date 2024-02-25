@@ -12,8 +12,6 @@ data class CourseTask(
     val courseTaskPlatform: String?,
     @SerializedName("name")
     val name: String,
-    @SerializedName("task_description")
-    val taskDescription: String,
     @SerializedName("type")
     val type: String,
     @SerializedName("version")

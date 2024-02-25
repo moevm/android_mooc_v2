@@ -12,16 +12,23 @@ import ru.moevm.moevm_checker.core.file_system.repository.CoursesInfoRepositoryI
 import ru.moevm.moevm_checker.core.network.FileDownloader
 import ru.moevm.moevm_checker.core.network.FileDownloaderImpl
 import ru.moevm.moevm_checker.core.task.TaskBuilder
+import ru.moevm.moevm_checker.core.task.TaskFileManager
+import ru.moevm.moevm_checker.core.task.TaskFileManagerImpl
 import ru.moevm.moevm_checker.core.task.TaskManager
 import ru.moevm.moevm_checker.utils.ProjectEnvironmentInfo
 
 object DepsInjector {
     val projectEnvironmentInfo = ProjectEnvironmentInfo()
 
-    private val coroutineDispatchers = CoroutineDispatchersImpl()
+    private var coroutineDispatchers: CoroutineDispatchers? = null
     private val taskManager = TaskManager(provideCoursesInfoRepository(), provideTaskBuilder())
 
-    fun provideDispatcher(): CoroutineDispatchers = coroutineDispatchers
+    fun provideDispatcher(): CoroutineDispatchers {
+        if (coroutineDispatchers == null) {
+            coroutineDispatchers = CoroutineDispatchersImpl()
+        }
+        return requireNotNull(coroutineDispatchers)
+    }
 
     fun provideFileDownloader(): FileDownloader {
         return FileDownloaderImpl()
@@ -61,5 +68,12 @@ object DepsInjector {
 
     fun provideTaskManager(): TaskManager {
         return taskManager
+    }
+
+    fun provideTaskFileManager(
+        coursesInfoRepository: CoursesInfoRepository = provideCoursesInfoRepository(),
+        fileDownloader: FileDownloader = provideFileDownloader(),
+    ): TaskFileManager {
+        return TaskFileManagerImpl(coursesInfoRepository, fileDownloader, projectEnvironmentInfo)
     }
 }

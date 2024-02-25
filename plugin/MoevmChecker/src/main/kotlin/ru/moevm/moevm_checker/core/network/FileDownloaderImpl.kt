@@ -1,7 +1,9 @@
 package ru.moevm.moevm_checker.core.network
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import ru.moevm.moevm_checker.core.data.FileDownloadingStatus
 import java.io.File
 import java.io.IOException
@@ -21,11 +23,13 @@ class FileDownloaderImpl : FileDownloader {
                 file.outputStream().use { outputStream ->
                     inputStream.copyTo(outputStream)
                 }
+                inputStream.close()
                 emit(FileDownloadingStatus.Success(file = file))
             } catch (e: IOException) {
                 println(e.message)
                 emit(FileDownloadingStatus.Failed(message = e.message ?: "downloadFile exception"))
             }
         }
+            .flowOn(Dispatchers.Default)
     }
 }

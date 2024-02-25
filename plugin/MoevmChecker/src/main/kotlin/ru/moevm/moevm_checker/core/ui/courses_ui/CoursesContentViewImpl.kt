@@ -3,8 +3,6 @@ package ru.moevm.moevm_checker.core.ui.courses_ui
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.VerticalFlowLayout
 import com.intellij.ui.components.JBScrollPane
-import ru.moevm.moevm_checker.core.di.DepsInjector
-import ru.moevm.moevm_checker.core.task.TaskManager
 import ru.moevm.moevm_checker.core.ui.BaseContent
 import ru.moevm.moevm_checker.core.ui.courses_ui.courses_tree.CourseTreeContextMenuActionListener
 import ru.moevm.moevm_checker.core.ui.courses_ui.courses_tree.CoursesTreeModel
@@ -14,9 +12,7 @@ import ru.moevm.moevm_checker.core.ui.courses_ui.data.CourseVO
 import ru.moevm.moevm_checker.core.ui.data.DialogPanelData
 import javax.swing.JTree
 
-class CoursesContentViewImpl(
-    taskManager: TaskManager = DepsInjector.provideTaskManager()
-) : BaseContent, CoursesContentView {
+class CoursesContentViewImpl : BaseContent, CoursesContentView {
     override val presenter = CoursesPresenterImpl(this)
     private val coursesTreeModel = CoursesTreeModel(
         CoursesTreeNode.buildTreeWithNodes(emptyList())
@@ -24,15 +20,15 @@ class CoursesContentViewImpl(
     private val contextMenuActionListener: CourseTreeContextMenuActionListener =
         object : CourseTreeContextMenuActionListener {
             override fun openTask(id: String) {
-                taskManager.setCurrentTask(id)
+                presenter.onOpenTaskClick(id)
             }
 
             override fun downloadTaskFiles(id: String) {
-                taskManager.downloadTaskFiles(id)
+                presenter.onDownloadTaskClick(id)
             }
 
             override fun removeTaskFiles(id: String) {
-                taskManager.removeTaskFiles(id)
+                presenter.onRemoveTaskClick(id)
             }
         }
 
@@ -49,12 +45,10 @@ class CoursesContentViewImpl(
 
     private fun createDialogPanel(): DialogPanel {
         val verticalFlowLayout = VerticalFlowLayout(/* fillHorizontally = */ true, /* fillVertically = */ true)
-        val component = JBScrollPane(
-            CoursesTreeView(coursesTreeModel, contextMenuActionListener).apply {
-                coursesTree = this
-                isVisible = true
-            }
-        )
+        val component = JBScrollPane(CoursesTreeView(coursesTreeModel, contextMenuActionListener).apply {
+            coursesTree = this
+            isVisible = true
+        })
         return DialogPanel(verticalFlowLayout).apply {
             add(component)
         }
