@@ -6,6 +6,7 @@ interface TaskView {
 
     fun refreshUiState(
         isLoadingLabelVisible: Boolean,
+        htmlTaskProblemText: String,
         taskResultText: String,
         taskStdoutText: String,
         taskStderrText: String
