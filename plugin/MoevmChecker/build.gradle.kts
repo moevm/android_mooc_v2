@@ -50,7 +50,7 @@ tasks {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("com.google.code.gson:gson:2.8.9")
-    implementation("com.mikepenz:multiplatform-markdown-renderer:0.6.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation("org.jetbrains:markdown:0.5.0")
 }
