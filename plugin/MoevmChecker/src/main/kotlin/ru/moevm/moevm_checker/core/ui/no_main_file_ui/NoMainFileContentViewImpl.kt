@@ -11,6 +11,7 @@ import ru.moevm.moevm_checker.utils.ResStr
 import javax.swing.JButton
 
 class NoMainFileContentViewImpl(
+    onResetCurrentViewToCourseView: () -> Unit,
 ) : BaseContent, NoMainFileContentView {
     /*  UI Components   */
     private lateinit var loadingProgressRow: Row
@@ -21,7 +22,8 @@ class NoMainFileContentViewImpl(
 
     override val presenter = NoMainFilePresenterImpl(
         this,
-        ResStr.getString("dataMainCourseFileName")
+        ResStr.getString("dataMainCourseFileName"),
+        onResetCurrentViewToCourseView,
     )
 
     override fun getDialogPanel(): DialogPanelData {

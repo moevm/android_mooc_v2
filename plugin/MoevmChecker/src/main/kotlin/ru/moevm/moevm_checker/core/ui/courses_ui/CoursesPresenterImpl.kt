@@ -49,7 +49,7 @@ class CoursesPresenterImpl(
     }
 
     override fun onOpenTaskClick(taskId: String) {
-        taskManager.setCurrentTask(taskId)
+        taskManager.openTask(taskId)
     }
 
     override fun onDownloadTaskClick(taskId: String) {

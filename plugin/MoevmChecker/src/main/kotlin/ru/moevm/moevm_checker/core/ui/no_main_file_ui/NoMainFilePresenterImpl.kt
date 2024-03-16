@@ -6,12 +6,13 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import ru.moevm.moevm_checker.core.data.FileDownloadingStatus
 import ru.moevm.moevm_checker.core.di.DepsInjector
-import ru.moevm.moevm_checker.core.file_system.repository.CoursesFileValidator
+import ru.moevm.moevm_checker.core.file_system.repository.PluginFileValidator
 
 class NoMainFilePresenterImpl(
     override val noMainFileContentView: NoMainFileContentView,
     mainFileName: String,
-    private val coursesFileValidator: CoursesFileValidator = DepsInjector.provideCourseFileValidator(),
+    private val onResetCurrentViewToCourseView: () -> Unit,
+    private val pluginFileValidator: PluginFileValidator = DepsInjector.providePluginFileValidatorImpl(),
     private val ioDispatcher: CoroutineDispatcher = DepsInjector.provideDispatcher().worker
 ) : NoMainFilePresenter {
     override val noMainFileModel: NoMainFileModel = NoMainFileModelImpl(
@@ -28,20 +29,20 @@ class NoMainFilePresenterImpl(
     }
 
     override fun onRefreshViewClick() {
-        TODO("Not yet implemented")
+        onResetCurrentViewToCourseView()
     }
 
     override fun isMainCoursesFileValid(): Boolean {
-        return coursesFileValidator.isMainCoursesFileValid()
+        return pluginFileValidator.isMainCoursesFileValid()
     }
 
     private fun handleStatus(status: FileDownloadingStatus) {
         val isMainFileNotFoundLabelVisible = (status is FileDownloadingStatus.Failed)
         val isLoadingMainCoursesFileInProgressVisible = (status == FileDownloadingStatus.Downloading)
         val isLoadingMainCoursesFileFailedVisible = (status is FileDownloadingStatus.Failed
-                || (status is FileDownloadingStatus.Success && !coursesFileValidator.isMainCoursesFileValid()))
+                || (status is FileDownloadingStatus.Success && !pluginFileValidator.isMainCoursesFileValid()))
         val isLoadingMainCoursesFileSuccessVisible = (status is FileDownloadingStatus.Success
-                && coursesFileValidator.isMainCoursesFileValid())
+                && pluginFileValidator.isMainCoursesFileValid())
         val isRefreshButtonVisible = (status is FileDownloadingStatus.Success)
 
         noMainFileContentView.refreshUiState(
