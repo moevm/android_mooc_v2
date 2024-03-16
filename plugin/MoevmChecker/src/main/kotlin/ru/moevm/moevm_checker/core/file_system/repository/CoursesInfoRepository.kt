@@ -6,7 +6,9 @@ import ru.moevm.moevm_checker.core.data.CourseTask
 import ru.moevm.moevm_checker.core.data.CoursesInfo
 
 interface CoursesInfoRepository {
-    fun invalidateCourseInfoState(): Flow<CoursesInfo?>
+    fun getCourseInfo(): Flow<CoursesInfo?>
+
+    fun getTaskDescription(taskId: String): String?
 
     fun findTaskAndCourseByTaskId(taskId: String): Pair<Course, CourseTask>?
 }

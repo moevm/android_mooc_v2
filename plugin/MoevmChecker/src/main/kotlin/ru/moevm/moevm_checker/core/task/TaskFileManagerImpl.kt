@@ -9,6 +9,7 @@ import ru.moevm.moevm_checker.core.network.FileDownloader
 import ru.moevm.moevm_checker.plugin_utils.Utils
 import ru.moevm.moevm_checker.plugin_utils.catchLog
 import ru.moevm.moevm_checker.utils.ProjectEnvironmentInfo
+import ru.moevm.moevm_checker.utils.ResStr
 import java.io.File
 import java.net.URL
 import java.util.zip.ZipFile
@@ -21,10 +22,10 @@ class TaskFileManagerImpl(
 
     override fun downloadTaskFiles(taskId: String): Flow<TaskDownloadStatus>? {
         val (course, task) = coursesInfoRepository.findTaskAndCourseByTaskId(taskId) ?: return null
-        val taskName = "task$taskId"
+        val taskName = TaskManager.getTaskFileNameByTaskId(taskId)
         val zipArchiveName = "$taskName.zip"
-        val outputCourseDir = Utils.buildFilePath(false, false, projectEnvironmentInfo.rootDir, course.name)
-        val taskFolder = File(Utils.buildFilePath(false, false, projectEnvironmentInfo.rootDir, course.name, taskName))
+        val outputCourseDir = Utils.buildFilePath(projectEnvironmentInfo.rootDir, course.name)
+        val taskFolder = File(Utils.buildFilePath(projectEnvironmentInfo.rootDir, course.name, taskName))
         if (!taskFolder.exists()) {
             taskFolder.mkdirs()
         }
@@ -41,6 +42,8 @@ class TaskFileManagerImpl(
             emit(TaskDownloadStatus.UNZIPPING)
             unzipArchive(file, taskFolder.path)
             file.delete()
+            // создаём новый файл, чтобы в дальнейшем плагин мог определять папку с заданием
+            File(Utils.buildFilePath(taskFolder.path, ResStr.getString("dataTaskFileName"))).createNewFile()
             emit(TaskDownloadStatus.UNZIPPING_FINISH)
         }.catchLog()
     }

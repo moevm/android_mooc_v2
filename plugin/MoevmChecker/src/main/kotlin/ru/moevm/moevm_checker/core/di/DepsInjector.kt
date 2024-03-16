@@ -4,9 +4,9 @@ import com.google.gson.Gson
 import ru.moevm.moevm_checker.core.common.CoroutineDispatchers
 import ru.moevm.moevm_checker.core.common.CoroutineDispatchersImpl
 import ru.moevm.moevm_checker.core.file_system.reader.CoursesInfoReader
-import ru.moevm.moevm_checker.core.file_system.reader.JsonCoursesInfoReaderImpl
-import ru.moevm.moevm_checker.core.file_system.repository.CoursesFileValidator
-import ru.moevm.moevm_checker.core.file_system.repository.CoursesFileValidatorImpl
+import ru.moevm.moevm_checker.core.file_system.reader.CoursesInfoReaderImpl
+import ru.moevm.moevm_checker.core.file_system.repository.PluginFileValidator
+import ru.moevm.moevm_checker.core.file_system.repository.PluginFileValidatorImpl
 import ru.moevm.moevm_checker.core.file_system.repository.CoursesInfoRepository
 import ru.moevm.moevm_checker.core.file_system.repository.CoursesInfoRepositoryImpl
 import ru.moevm.moevm_checker.core.network.FileDownloader
@@ -21,7 +21,13 @@ object DepsInjector {
     val projectEnvironmentInfo = ProjectEnvironmentInfo()
 
     private var coroutineDispatchers: CoroutineDispatchers? = null
-    private val taskManager = TaskManager(provideCoursesInfoRepository(), provideTaskBuilder())
+    private val taskManager = TaskManager(
+        projectEnvironmentInfo,
+        provideCoursesInfoRepository(),
+        provideTaskBuilder(),
+        provideDispatcher().worker,
+        provideDispatcher().ui,
+    )
 
     fun provideDispatcher(): CoroutineDispatchers {
         if (coroutineDispatchers == null) {
@@ -34,10 +40,10 @@ object DepsInjector {
         return FileDownloaderImpl()
     }
 
-    fun provideCourseFileValidator(
+    fun providePluginFileValidatorImpl(
         coursesInfoReader: CoursesInfoReader = provideCoursesInfoReader(),
-    ): CoursesFileValidator {
-        return CoursesFileValidatorImpl(
+    ): PluginFileValidator {
+        return PluginFileValidatorImpl(
             projectEnvironmentInfo,
             coursesInfoReader
         )
@@ -53,9 +59,10 @@ object DepsInjector {
     }
 
     fun provideCoursesInfoReader(
-        gson: Gson = provideGson()
+        gson: Gson = provideGson(),
+        taskBuilder: TaskBuilder = provideTaskBuilder()
     ): CoursesInfoReader {
-        return JsonCoursesInfoReaderImpl(gson)
+        return CoursesInfoReaderImpl(gson, taskBuilder)
     }
 
     private fun provideGson(): Gson {

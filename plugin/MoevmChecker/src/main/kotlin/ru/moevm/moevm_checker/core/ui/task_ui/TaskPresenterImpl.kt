@@ -1,12 +1,16 @@
 package ru.moevm.moevm_checker.core.ui.task_ui
 
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import org.intellij.markdown.flavours.commonmark.CommonMarkFlavourDescriptor
 import org.intellij.markdown.html.HtmlGenerator
 import org.intellij.markdown.parser.MarkdownParser
 import ru.moevm.moevm_checker.android.tasks.GradleCommandLine
 import ru.moevm.moevm_checker.android.tasks.GradleOutput
 import ru.moevm.moevm_checker.core.di.DepsInjector
+import ru.moevm.moevm_checker.plugin_utils.catchLog
 
 class TaskPresenterImpl(
     override val taskView: TaskView,
@@ -17,27 +21,47 @@ class TaskPresenterImpl(
 
     private val environment = DepsInjector.projectEnvironmentInfo
 
-    private val simpleMarkdown = "# Здесь будет описание задачи \n" +
-            "## Здесь будет описание задачи \n" +
-            "# Здесь будет описание задачи \n" +
-            "## Здесь будет описание задачи \n" +
-            "### Наша задача очень крутая!"
+    private val model: TaskModel = TaskModelImpl(this)
+
     override fun onViewCreated() {
-        val htmlTaskProblemText = convertMarkdownToHtml()
-        taskView.refreshUiState(
-            isLoadingLabelVisible = false,
-            htmlTaskProblemText = htmlTaskProblemText,
-            taskResultText = "",
-            taskStdoutText = "",
-            taskStderrText = ""
-        )
+        loadTaskProblem()
+    }
+
+    private fun loadTaskProblem() {
+        flow {
+            emit(model.getTaskDescriptionInfo())
+        }
+            .catchLog()
+            .onEach { problem ->
+                val htmlTaskProblemText = if (problem != null) {
+                    convertMarkdownToHtml(problem)
+                } else {
+                    "error"
+                }
+                withContext(uiDispatcher) {
+                    taskView.refreshUiState(
+                        isLoadingLabelVisible = false,
+                        htmlTaskProblemText = htmlTaskProblemText,
+                        taskResultText = "",
+                        taskStdoutText = "",
+                        taskStderrText = ""
+                    )
+                }
+            }
+            .launchIn(CoroutineScope(ioDispatcher))
     }
 
     override fun onCheckClicked() {
         prevTaskCheck?.cancel()
         prevTaskCheck = CoroutineScope(ioDispatcher).launch {
-            val output = runTestTask()
-            val htmlTaskProblemText = convertMarkdownToHtml()
+            var output: GradleOutput? = null
+            try {
+                output = runTestTask()
+            } catch (e: Exception) {
+                output = GradleOutput(isSuccess = false, _messages = listOf(e.message ?: ""), "", "")
+                println("exception: onCheckClicked ${e.message}")
+            }
+
             val testResult = buildString {
                 append("Result:\n")
                 append(output?.firstMessage + "\n\n")
@@ -54,7 +78,7 @@ class TaskPresenterImpl(
             withContext(uiDispatcher) {
                 taskView.refreshUiState(
                     isLoadingLabelVisible = false,
-                    htmlTaskProblemText = htmlTaskProblemText,
+                    htmlTaskProblemText = convertMarkdownToHtml(model.taskProblemHtml), // FIXME Придумать сохранение получше
                     taskResultText = testResult,
                     taskStdoutText = testOutput,
                     taskStderrText = testError
@@ -64,10 +88,10 @@ class TaskPresenterImpl(
     }
 
     // FIXME Не отображает изображения
-    private fun convertMarkdownToHtml(): String {
+    private fun convertMarkdownToHtml(markdown: String): String {
         val flavour = CommonMarkFlavourDescriptor()
-        val parsedTree = MarkdownParser(flavour).buildMarkdownTreeFromString(simpleMarkdown)
-        val html = HtmlGenerator(simpleMarkdown, parsedTree, flavour).generateHtml()
+        val parsedTree = MarkdownParser(flavour).buildMarkdownTreeFromString(markdown)
+        val html = HtmlGenerator(markdown, parsedTree, flavour).generateHtml()
         return html
     }
 

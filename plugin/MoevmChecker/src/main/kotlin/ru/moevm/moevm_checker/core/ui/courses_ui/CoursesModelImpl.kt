@@ -11,7 +11,7 @@ class CoursesModelImpl(
     private val coursesInfoRepository: CoursesInfoRepository = DepsInjector.provideCoursesInfoRepository()
 ) : CoursesModel {
     override fun forceInvalidateCoursesInfo(): Flow<CoursesInfo> {
-        return coursesInfoRepository.invalidateCourseInfoState()
+        return coursesInfoRepository.getCourseInfo()
             .map { coursesInfo ->
                 val courses = requireNotNull(coursesInfo?.courses)
                 val version = requireNotNull(coursesInfo?.version)

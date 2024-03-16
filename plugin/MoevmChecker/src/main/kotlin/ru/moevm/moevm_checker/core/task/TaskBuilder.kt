@@ -8,15 +8,13 @@ import ru.moevm.moevm_checker.utils.ProjectEnvironmentInfo
 class TaskBuilder(
     private val environment: ProjectEnvironmentInfo = DepsInjector.projectEnvironmentInfo
 ) {
-    fun buildTask(taskPlatformType: TaskPlatformType, taskId: String, courseName: String, taskName: String): Task? {
+    fun buildTask(taskPlatformType: TaskPlatformType, taskId: String): Task? {
         val rootDir = environment.rootDir
-        val pathToTask =
-            rootDir + Utils.buildFilePath(withStartSplitter = true, withEndSplitter = false, courseName, taskName)
+        val pathToTask = Utils.buildFilePath(rootDir)
         return when (taskPlatformType) {
             TaskPlatformType.ANDROID -> {
                 AndroidTask(pathToTask, taskId, environment.jdkPath)
             }
-
             else -> null
         }
     }
