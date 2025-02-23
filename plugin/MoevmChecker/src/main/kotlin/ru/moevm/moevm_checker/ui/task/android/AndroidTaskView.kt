@@ -1,24 +1,27 @@
-package ru.moevm.moevm_checker.ui.task
+package ru.moevm.moevm_checker.ui.task.android
 
 import com.android.tools.idea.appinspection.inspectors.network.view.details.createVerticalScrollPane
 import com.intellij.collaboration.ui.SimpleHtmlPane
 import com.intellij.collaboration.ui.setHtmlBody
 import com.intellij.ui.AnimatedIcon
-import com.intellij.ui.dsl.builder.Align
-import com.intellij.ui.dsl.builder.Row
-import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.JBColor
+import com.intellij.ui.components.JBTextArea
+import com.intellij.ui.dsl.builder.*
+import com.intellij.util.ui.JBEmptyBorder
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.intellij.markdown.flavours.commonmark.CommonMarkFlavourDescriptor
 import org.intellij.markdown.html.HtmlGenerator
 import org.intellij.markdown.parser.MarkdownParser
+import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
 import ru.moevm.moevm_checker.core.utils.simpleLazy
 import ru.moevm.moevm_checker.dagger.PluginComponent
 import ru.moevm.moevm_checker.ui.BaseView
 import ru.moevm.moevm_checker.ui.DialogPanelData
 import javax.swing.JEditorPane
+import javax.swing.text.JTextComponent
 
-class TaskView(
+class AndroidTaskView(
     private val component: PluginComponent,
     private val courseId: String,
     private val taskId: String,
@@ -26,13 +29,13 @@ class TaskView(
 
     /*  UI Components   */
     private lateinit var htmlTaskProblem: JEditorPane
-    private lateinit var textResult: JEditorPane
-    private lateinit var textStdout: JEditorPane
-    private lateinit var textStderr: JEditorPane
+    private lateinit var textResult: Cell<JEditorPane>
+    private lateinit var textStdout: Cell<JBTextArea>
+    private lateinit var textStderr: Cell<JBTextArea>
     private lateinit var testing: Row
 
-    override val viewModel: TaskViewModel by simpleLazy {
-        component.taskViewModel
+    override val viewModel: AndroidTaskViewModel by simpleLazy {
+        component.androidTaskViewModel
     }
 
     override fun getDialogPanel(): DialogPanelData {
@@ -57,7 +60,17 @@ class TaskView(
             .launchIn(viewScope)
 
         viewModel.taskResultData
-            .onEach {  }
+            .onEach {
+                textResult.apply {
+                    showAndSetOrHideAndClearText(it?.taskResult?.toString())
+                    if (it?.taskResult != null) {
+                        addColorByResult(it.taskResult)
+                    }
+                }
+                textStdout.showAndSetOrHideAndClearText(it?.taskStdoutText)
+                textStderr.showAndSetOrHideAndClearText(it?.taskStderrText)
+            }
+            .launchIn(viewScope)
     }
 
     private fun createScrollableDialogPanel() = panel {
@@ -68,33 +81,65 @@ class TaskView(
     }
 
     private fun createDialogPanel() = panel {
-        row {
-            cell(SimpleHtmlPane("").apply {
-                htmlTaskProblem = this
-                visible(true)
-                isEditable = false
-            })
-        }
-        group {
+        group(title = "Problem") {
+            row {
+                cell(SimpleHtmlPane("").apply {
+                    htmlTaskProblem = this
+                    visible(true)
+                    isEditable = false
+                })
+            }
             row {
                 button("Проверить") {
                     viewModel.onTestClick()
                 }
             }
+        }
 
+        group(title = "Result") {
             testing = row {
                 icon(AnimatedIcon.Default())
                 label("Проверка решения...")
             }.apply { visible(false) }
 
             row {
-                textResult = text("").component
+                textResult = text("")
+                    .label("Result: ")
+                    .visible(false)
             }
             row {
-                textStdout = text("").component
+                textStdout = textArea()
+                    .label("Stdout: ", position = LabelPosition.TOP)
+                    .align(AlignX.FILL)
+                    .visible(false)
             }
             row {
-                textStderr = text("").component
+                textStderr = textArea()
+                    .label("Stderr: ", position = LabelPosition.TOP)
+                    .align(AlignX.FILL)
+                    .visible(false)
+            }
+        }
+    }.apply {
+        border = JBEmptyBorder(12)
+    }
+
+    private fun Cell<JTextComponent>.showAndSetOrHideAndClearText(text: String?) {
+        if (text == null) {
+            visible(false)
+            text("")
+        } else {
+            text(text)
+            visible(true)
+        }
+    }
+    private fun Cell<JTextComponent>.addColorByResult(result: CheckResult) {
+        when (result) {
+            CheckResult.Passed -> {
+                this.component.foreground = JBColor.GREEN
+            }
+            else -> {
+                this.component.foreground = JBColor.RED
             }
         }
     }
