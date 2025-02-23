@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import ru.moevm.moevm_checker.core.controller.CoursesRepository
 import ru.moevm.moevm_checker.core.tasks.TaskFileManager
+import ru.moevm.moevm_checker.core.tasks.TaskManager
 import ru.moevm.moevm_checker.dagger.Io
 import ru.moevm.moevm_checker.dagger.Ui
 import ru.moevm.moevm_checker.ui.BaseViewModel
@@ -13,6 +14,7 @@ import ru.moevm.moevm_checker.ui.courses_tree_content.data.TaskVO
 import javax.inject.Inject
 
 class CoursesTreeViewModel @Inject constructor(
+    private val taskManager: TaskManager,
     private val taskFileManager: TaskFileManager,
     private val coursesRepository: CoursesRepository,
     @Ui private val uiDispatcher: CoroutineDispatcher,
@@ -25,7 +27,7 @@ class CoursesTreeViewModel @Inject constructor(
     fun onViewCreated() {
         viewModelScope.launch {
             // TODO проверять версию репозитория
-            val listOfCourses = coursesRepository.getCoursesInfo()
+            val listOfCourses = coursesRepository.getCoursesInfoFlow()
                 .flowOn(ioDispatcher)
                 .single().courses.map { course ->
                     CourseVO(
@@ -39,6 +41,15 @@ class CoursesTreeViewModel @Inject constructor(
                 }
             listOfCoursesMutableState.value = listOfCourses
         }
+    }
+
+    fun onOpenTaskClick(taskId: String) {
+        taskManager.openTask(taskId)
+            .flowOn(ioDispatcher)
+            .onEach {
+                println("opening task $taskId")
+            }
+            .launchIn(viewModelScope)
     }
 
     fun onDownloadTaskClick(taskId: String) {

@@ -4,6 +4,7 @@ import com.intellij.ide.RecentProjectsManager
 import com.intellij.openapi.project.ex.ProjectManagerEx
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.withContext
 import ru.moevm.moevm_checker.core.controller.CoursesRepository
 import ru.moevm.moevm_checker.core.data.ProjectConfigProvider
@@ -11,17 +12,22 @@ import ru.moevm.moevm_checker.core.utils.coroutine.flowSafe
 import java.io.File
 import kotlin.io.path.Path
 
-class TaskManager(
+interface TaskManager {
+    fun openTask(taskId: String): Flow<Unit>
+    fun getTaskDescription(taskId: String): Flow<String>
+}
+
+class TaskManagerImpl(
     private val coursesRepository: CoursesRepository,
     private val projectConfigProvider: ProjectConfigProvider,
     private val uiDispatcher: CoroutineDispatcher
-) {
+) : TaskManager {
 
-    fun openTask(taskId: String): Flow<Unit> = flowSafe {
-        val rootDir = projectConfigProvider.rootDir ?: return@flowSafe
-        val (selectedCourse, _) = coursesRepository.findCourseAndTaskByTaskId(taskId) ?: return@flowSafe
-        val taskName = getTaskFileNameByTaskId(taskId)
-        val pathToTask = buildPath(rootDir, selectedCourse.name, taskName)
+    override fun openTask(taskId: String): Flow<Unit> = flowSafe {
+        val projectDir = projectConfigProvider.rootDir ?: return@flowSafe
+        val (selectedCourse, _) = coursesRepository.findCourseAndTaskByTaskIdFlow(taskId).last() ?: return@flowSafe
+        val taskName = TaskConstants.getTaskFileNameByTaskId(taskId)
+        val pathToTask = buildPath(projectDir, selectedCourse.name, taskName)
         println("open new task, path = $pathToTask")
         if (File(pathToTask).exists()) {
             ProjectManagerEx.getInstanceEx().openProjectAsync(Path(pathToTask))
@@ -34,20 +40,18 @@ class TaskManager(
         }
     }
 
-    fun getTaskDescription(taskId: String): Flow<String> = flowSafe {
-        val rootDir = projectConfigProvider.rootDir
-        if (rootDir == null) {
+    override fun getTaskDescription(taskId: String): Flow<String> = flowSafe {
+        val taskDir = projectConfigProvider.rootDir
+        if (taskDir == null) {
             emit("")
             return@flowSafe
         }
-        val courseAndTask = coursesRepository.findCourseAndTaskByTaskId(taskId)
+        val courseAndTask = coursesRepository.findCourseAndTaskByTaskIdFlow(taskId).last()
         if (courseAndTask == null) {
             emit("")
             return@flowSafe
         }
-        val selectedCourse = courseAndTask.first
-        val taskName = getTaskFileNameByTaskId(taskId)
-        val descriptionFile = File(buildPath(rootDir, selectedCourse.name, taskName, TASK_DESCRIPTION_NAME))
+        val descriptionFile = File(buildPath(taskDir, TaskConstants.TASK_DESCRIPTION_NAME))
         if (descriptionFile.exists()) {
             emit(descriptionFile.readText())
         } else {
@@ -56,11 +60,6 @@ class TaskManager(
     }
 
     companion object {
-        const val TASK_DESCRIPTION_NAME = "task_description.md"
-
-        @JvmStatic
-        fun getTaskFileNameByTaskId(taskId: String): String = "task${taskId}"
-
         @JvmStatic
         private fun buildPath(vararg piece: String): String {
             return piece.fold("") { prev, new ->
