@@ -22,12 +22,23 @@ import ru.moevm.moevm_checker.core.tasks.TaskFileManager
 import ru.moevm.moevm_checker.core.tasks.TaskFileManagerImpl
 import ru.moevm.moevm_checker.core.tasks.TaskManager
 import ru.moevm.moevm_checker.core.tasks.TaskManagerImpl
+import ru.moevm.moevm_checker.core.tasks.codetask.AbstractCheckSystem
+import ru.moevm.moevm_checker.core.tasks.codetask.platforms.android.AndroidCodeTaskCheckSystem
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
 object AppModule {
 // TODO Пересмотреть использование Singleton и заменить на Scope
+
+    @Provides
+    @Singleton
+    @AndroidCheckSystem
+    fun provideAndroidCheckSystem(
+        projectConfigProvider: ProjectConfigProvider,
+    ): AbstractCheckSystem {
+        return AndroidCodeTaskCheckSystem(projectConfigProvider.jdkPath)
+    }
 
     @Provides
     @Singleton

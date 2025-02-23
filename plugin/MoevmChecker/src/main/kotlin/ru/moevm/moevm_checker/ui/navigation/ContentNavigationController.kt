@@ -7,7 +7,7 @@ import com.intellij.ui.content.ContentManager
 import ru.moevm.moevm_checker.dagger.PluginComponent
 import ru.moevm.moevm_checker.ui.auth_content.AuthView
 import ru.moevm.moevm_checker.ui.courses_tree_content.CoursesTreeView
-import ru.moevm.moevm_checker.ui.task.TaskView
+import ru.moevm.moevm_checker.ui.task.android.AndroidTaskView
 
 class ContentNavigationController(
     private val contentManager: ContentManager,
@@ -58,10 +58,10 @@ class ContentNavigationController(
         contentManager.addContent(content)
     }
 
-    fun setTaskContent(courseId: String, taskId: String) {
+    fun setAndroidTaskContent(courseId: String, taskId: String) {
         mapOfContents.removeContentIf { name -> name == ContentName.TASK }
 
-        val taskView = TaskView(pluginComponent, courseId, taskId)
+        val taskView = AndroidTaskView(pluginComponent, courseId, taskId)
         val taskViewPanelData = taskView.getDialogPanel()
         val content = ContentFactory.getInstance()
             .createContent(taskViewPanelData.dialogPanel, taskViewPanelData.panelName, /* isLocked = */ false).apply {

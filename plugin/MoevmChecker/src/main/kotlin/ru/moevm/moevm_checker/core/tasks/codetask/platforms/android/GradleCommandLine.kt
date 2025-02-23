@@ -5,6 +5,7 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.CapturingProcessHandler
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.io.FileUtil
+import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
 import ru.moevm.moevm_checker.core.tasks.codetask.CodeTestResult
 import ru.moevm.moevm_checker.core.tasks.codetask.platforms.android.GradleConstants.GRADLE_WRAPPER_UNIX
 import ru.moevm.moevm_checker.core.tasks.codetask.platforms.android.GradleConstants.GRADLE_WRAPPER_WIN
@@ -19,16 +20,16 @@ class GradleCommandLine(
             val handler = CapturingProcessHandler(cmd)
             handler.runProcess(timeoutMs)
         } catch (e: ExecutionException) {
-            return CodeTestResult(isSuccess = false, listOf("test launch error"), "", "")
+            return CodeTestResult(isSuccess = false, CheckResult.Error("Test launch error"), "", "${e.message}")
         }
 
         val stderr = output.stderr
         val stdout = output.stdout
         if (!isTaskPassed(stderr, stdout)) {
-            return CodeTestResult(false, listOf("Failed!!!"), stdout, stderr)
+            return CodeTestResult(false, CheckResult.Failed, stdout, stderr)
         }
 
-        return CodeTestResult(true, listOf("Passed!!!"), stdout, stderr)
+        return CodeTestResult(true, CheckResult.Passed, stdout, stderr)
     }
 
     private fun isTaskPassed(

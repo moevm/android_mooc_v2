@@ -38,11 +38,12 @@ class MainToolWindow : ToolWindowFactory {
         )
 
         // TODO: добавить предзагрузку данных пользователя вместо авторизации?
+        // TODO: Поддержать другие типы тасок
         val rootDir = projectConfig.rootDir
         when {
             rootDir != null && isTaskEnvironmentExisted(rootDir) -> {
                 val (courseId, taskId) = extractCourseIdAndTaskId(rootDir)
-                contentNavigationController?.setTaskContent(courseId, taskId)
+                contentNavigationController?.setAndroidTaskContent(courseId, taskId)
             }
             else -> {
                 contentNavigationController?.setAuthContent()

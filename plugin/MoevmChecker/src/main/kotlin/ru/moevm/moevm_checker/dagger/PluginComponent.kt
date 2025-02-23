@@ -6,7 +6,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import ru.moevm.moevm_checker.core.data.ProjectConfigProvider
 import ru.moevm.moevm_checker.ui.auth_content.AuthViewModel
 import ru.moevm.moevm_checker.ui.courses_tree_content.CoursesTreeViewModel
-import ru.moevm.moevm_checker.ui.task.TaskViewModel
+import ru.moevm.moevm_checker.ui.task.android.AndroidTaskViewModel
 import javax.inject.Singleton
 
 @Singleton
@@ -17,7 +17,7 @@ interface PluginComponent {
 
     val coursesTreeViewModel: CoursesTreeViewModel
 
-    val taskViewModel: TaskViewModel
+    val androidTaskViewModel: AndroidTaskViewModel
 
     @Component.Factory
     interface Factory {
