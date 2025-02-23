@@ -4,6 +4,7 @@ import com.intellij.openapi.util.SystemInfo
 import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
 import dagger.Module
 import dagger.Provides
+import kotlinx.coroutines.CoroutineDispatcher
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -19,12 +20,24 @@ import ru.moevm.moevm_checker.core.network.downloading.FileDownloader
 import ru.moevm.moevm_checker.core.network.downloading.FileDownloaderImpl
 import ru.moevm.moevm_checker.core.tasks.TaskFileManager
 import ru.moevm.moevm_checker.core.tasks.TaskFileManagerImpl
+import ru.moevm.moevm_checker.core.tasks.TaskManager
+import ru.moevm.moevm_checker.core.tasks.TaskManagerImpl
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 @Module
 object AppModule {
 // TODO Пересмотреть использование Singleton и заменить на Scope
+
+    @Provides
+    @Singleton
+    fun provideTaskManager(
+        coursesRepository: CoursesRepository,
+        projectConfigProvider: ProjectConfigProvider,
+        @Ui dispatcher: CoroutineDispatcher
+    ): TaskManager {
+        return TaskManagerImpl(coursesRepository, projectConfigProvider, dispatcher)
+    }
 
     @Provides
     @Singleton

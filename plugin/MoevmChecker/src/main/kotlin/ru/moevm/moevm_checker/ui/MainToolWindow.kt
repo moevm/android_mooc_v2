@@ -7,7 +7,7 @@ import com.intellij.openapi.wm.ToolWindowFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.swing.Swing
 import ru.moevm.moevm_checker.core.data.ProjectConfigProvider
-import ru.moevm.moevm_checker.core.tasks.TaskFileManager
+import ru.moevm.moevm_checker.core.tasks.TaskConstants
 import ru.moevm.moevm_checker.dagger.DaggerPluginComponent
 import ru.moevm.moevm_checker.dagger.PluginComponent
 import ru.moevm.moevm_checker.ui.navigation.ContentNavigationController
@@ -53,13 +53,13 @@ class MainToolWindow : ToolWindowFactory {
     }
 
     private fun isTaskEnvironmentExisted(path: String): Boolean {
-        val taskFile = File(path, TaskFileManager.TASK_FILE_NAME)
+        val taskFile = File(path, TaskConstants.TASK_FILE_NAME)
         return if (Utils.isFileReadable(taskFile)) {
             val reader = taskFile.bufferedReader()
             var isTaskEnvironmentValid: Boolean
             try {
-                val isCourseIdFound = reader.readLine().startsWith(TaskFileManager.COURSE_ID_FOR_TASK_FILE)
-                val isTaskIdFound = reader.readLine().startsWith(TaskFileManager.TASK_ID_FOR_TASK_FILE)
+                val isCourseIdFound = reader.readLine().startsWith(TaskConstants.COURSE_ID_FOR_TASK_FILE)
+                val isTaskIdFound = reader.readLine().startsWith(TaskConstants.TASK_ID_FOR_TASK_FILE)
                 isTaskEnvironmentValid = isCourseIdFound && isTaskIdFound
             } catch (e: Exception) {
                 isTaskEnvironmentValid = false
@@ -74,10 +74,10 @@ class MainToolWindow : ToolWindowFactory {
     }
 
     private fun extractCourseIdAndTaskId(path: String): Pair<String, String> {
-        val taskFile = File(path, TaskFileManager.TASK_FILE_NAME)
+        val taskFile = File(path, TaskConstants.TASK_FILE_NAME)
         val reader = taskFile.bufferedReader()
-        val courseId = reader.readLine().drop(TaskFileManager.COURSE_ID_FOR_TASK_FILE.length)
-        val taskId = reader.readLine().drop(TaskFileManager.TASK_ID_FOR_TASK_FILE.length)
+        val courseId = reader.readLine().drop(TaskConstants.COURSE_ID_FOR_TASK_FILE.length)
+        val taskId = reader.readLine().drop(TaskConstants.TASK_ID_FOR_TASK_FILE.length)
         return courseId to taskId
     }
 }

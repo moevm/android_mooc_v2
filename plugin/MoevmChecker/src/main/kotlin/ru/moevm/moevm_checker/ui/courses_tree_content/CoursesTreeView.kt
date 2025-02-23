@@ -30,7 +30,7 @@ class CoursesTreeView(
     private val contextMenuActionListener: CourseTreeContextMenuActionListener =
         object : CourseTreeContextMenuActionListener {
             override fun openTask(id: String) {
-//                viewModel.onOpenTaskClick(id)
+                viewModel.onOpenTaskClick(id)
             }
 
             override fun downloadTaskFiles(id: String) {

@@ -2,12 +2,16 @@ package ru.moevm.moevm_checker.ui.task
 
 import com.android.tools.idea.appinspection.inspectors.network.view.details.createVerticalScrollPane
 import com.intellij.collaboration.ui.SimpleHtmlPane
+import com.intellij.collaboration.ui.setHtmlBody
 import com.intellij.ui.AnimatedIcon
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.Row
 import com.intellij.ui.dsl.builder.panel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.intellij.markdown.flavours.commonmark.CommonMarkFlavourDescriptor
+import org.intellij.markdown.html.HtmlGenerator
+import org.intellij.markdown.parser.MarkdownParser
 import ru.moevm.moevm_checker.core.utils.simpleLazy
 import ru.moevm.moevm_checker.dagger.PluginComponent
 import ru.moevm.moevm_checker.ui.BaseView
@@ -42,7 +46,7 @@ class TaskView(
     private fun bindEvents() {
         viewModel.taskDescription
             .onEach { description ->
-                htmlTaskProblem.text = description
+                htmlTaskProblem.setHtmlBody(description?.let { convertMarkdownToHtml(description) } ?: "")
             }
             .launchIn(viewScope)
 
@@ -93,5 +97,12 @@ class TaskView(
                 textStderr = text("").component
             }
         }
+    }
+
+    private fun convertMarkdownToHtml(markdown: String): String {
+        val flavour = CommonMarkFlavourDescriptor()
+        val parsedTree = MarkdownParser(flavour).buildMarkdownTreeFromString(markdown)
+        val html = HtmlGenerator(markdown, parsedTree, flavour).generateHtml()
+        return html
     }
 }

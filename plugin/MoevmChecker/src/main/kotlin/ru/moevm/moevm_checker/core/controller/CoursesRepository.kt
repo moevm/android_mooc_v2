@@ -8,13 +8,13 @@ import ru.moevm.moevm_checker.core.utils.coroutine.flowSafe
 import ru.moevm.moevm_checker.core.network.GoogleFilesApi
 
 interface CoursesRepository {
-    fun initRepository(force: Boolean): Flow<Boolean>
+    fun initRepositoryFlow(force: Boolean): Flow<Boolean>
 
-    fun getCoursesInfo(): Flow<CoursesInfo>
+    fun getCoursesInfoFlow(): Flow<CoursesInfo>
 
-    fun getTaskInfo(courseId: String, taskId: String): Flow<CourseTask?>
+    fun getTaskInfoFlow(courseId: String, taskId: String): Flow<CourseTask?>
 
-    fun findCourseAndTaskByTaskId(taskId: String): Pair<Course, CourseTask>?
+    fun findCourseAndTaskByTaskIdFlow(taskId: String): Flow<Pair<Course, CourseTask>?>
 }
 
 class CoursesRepositoryImpl(
@@ -23,7 +23,7 @@ class CoursesRepositoryImpl(
 
     private val coursesInfoMutableState = MutableStateFlow<CoursesInfo?>(null)
 
-    override fun initRepository(force: Boolean): Flow<Boolean> = flowSafe {
+    override fun initRepositoryFlow(force: Boolean): Flow<Boolean> = flowSafe {
         if (!force && coursesInfoMutableState.value != null) {
             emit(true)
             return@flowSafe
@@ -34,22 +34,25 @@ class CoursesRepositoryImpl(
         emit(true)
     }
 
-    override fun getCoursesInfo(): Flow<CoursesInfo> = flowSafe {
+    override fun getCoursesInfoFlow(): Flow<CoursesInfo> = flowSafe {
         if (coursesInfoMutableState.value == null) {
-            initRepository(false)
+            initRepositoryFlow(false).last()
         }
         emit(requireNotNull(coursesInfoMutableState.value))
     }
 
-    override fun getTaskInfo(courseId: String, taskId: String): Flow<CourseTask?> = flowSafe {
+    override fun getTaskInfoFlow(courseId: String, taskId: String): Flow<CourseTask?> = flowSafe {
         if (coursesInfoMutableState.value == null) {
-            initRepository(false)
+            initRepositoryFlow(false).last()
         }
         emit(findTaskByCourseIdAndTaskId(courseId, taskId))
     }
 
-    override fun findCourseAndTaskByTaskId(taskId: String): Pair<Course, CourseTask>? {
-        val courses = coursesInfoMutableState.value?.courses ?: return null
+    override fun findCourseAndTaskByTaskIdFlow(taskId: String): Flow<Pair<Course, CourseTask>?> = flowSafe {
+        if (coursesInfoMutableState.value == null) {
+            initRepositoryFlow(false).last()
+        }
+        val courses = requireNotNull(coursesInfoMutableState.value?.courses)
         var selectedTask: CourseTask? = null
         var selectedCourse: Course? = null
         for (course in courses) {
@@ -59,9 +62,11 @@ class CoursesRepositoryImpl(
                 break
             }
         }
-        if (selectedCourse == null || selectedTask == null)
-            return null
-        return selectedCourse to selectedTask
+        if (selectedCourse == null || selectedTask == null) {
+            emit(null)
+        } else {
+            emit(selectedCourse to selectedTask)
+        }
     }
 
     private fun findTaskByCourseIdAndTaskId(courseId: String, taskId: String): CourseTask? {

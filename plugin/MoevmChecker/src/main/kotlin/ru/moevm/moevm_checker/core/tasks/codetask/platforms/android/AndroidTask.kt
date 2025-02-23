@@ -6,9 +6,10 @@ import ru.moevm.moevm_checker.core.tasks.codetask.CodeTestResult
 import java.io.File
 
 class AndroidTask(
-    taskFolder: File,
+    override val taskFolder: File,
     private val checkSystem: AndroidCodeTaskCheckSystem,
-) : AbstractCodeTask(taskFolder) {
+) : AbstractCodeTask {
+
     override fun execute(): CheckStatus {
         val result = checkSystem.rutTests(taskFolder)
         val checkResult = if (result.isSuccess) {
