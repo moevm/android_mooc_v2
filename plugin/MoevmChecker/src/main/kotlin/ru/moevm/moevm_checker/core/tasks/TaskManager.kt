@@ -13,8 +13,8 @@ import java.io.File
 import kotlin.io.path.Path
 
 interface TaskManager {
-    fun openTask(taskId: String): Flow<Unit>
-    fun getTaskDescription(taskId: String): Flow<String>
+    fun openTask(courseId: String, taskId: String): Flow<Unit>
+    fun getTaskDescription(courseId: String, taskId: String): Flow<String>
 }
 
 class TaskManagerImpl(
@@ -23,9 +23,9 @@ class TaskManagerImpl(
     private val uiDispatcher: CoroutineDispatcher
 ) : TaskManager {
 
-    override fun openTask(taskId: String): Flow<Unit> = flowSafe {
+    override fun openTask(courseId: String, taskId: String): Flow<Unit> = flowSafe {
         val projectDir = projectConfigProvider.rootDir ?: return@flowSafe
-        val (selectedCourse, _) = coursesRepository.findCourseAndTaskByTaskIdFlow(taskId).last() ?: return@flowSafe
+        val (selectedCourse, _) = coursesRepository.findCourseAndTaskByIdFlow(courseId, taskId).last() ?: return@flowSafe
         val taskName = TaskConstants.getTaskFileNameByTaskId(taskId)
         val pathToTask = buildPath(projectDir, selectedCourse.name, taskName)
         println("open new task, path = $pathToTask")
@@ -40,13 +40,13 @@ class TaskManagerImpl(
         }
     }
 
-    override fun getTaskDescription(taskId: String): Flow<String> = flowSafe {
+    override fun getTaskDescription(courseId: String, taskId: String): Flow<String> = flowSafe {
         val taskDir = projectConfigProvider.rootDir
         if (taskDir == null) {
             emit("")
             return@flowSafe
         }
-        val courseAndTask = coursesRepository.findCourseAndTaskByTaskIdFlow(taskId).last()
+        val courseAndTask = coursesRepository.findCourseAndTaskByIdFlow(courseId, taskId).last()
         if (courseAndTask == null) {
             emit("")
             return@flowSafe
