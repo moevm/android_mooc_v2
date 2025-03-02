@@ -9,10 +9,8 @@ import ru.moevm.moevm_checker.core.utils.simpleLazy
 import ru.moevm.moevm_checker.dagger.PluginComponent
 import ru.moevm.moevm_checker.ui.BaseView
 import ru.moevm.moevm_checker.ui.DialogPanelData
-import ru.moevm.moevm_checker.ui.courses_tree_content.data.CourseVO
 import ru.moevm.moevm_checker.ui.courses_tree_content.tree.BaseTreeView
 import ru.moevm.moevm_checker.ui.courses_tree_content.tree.CourseTreeContextMenuActionListener
-import ru.moevm.moevm_checker.ui.courses_tree_content.tree.CoursesTreeNode
 import javax.swing.JTree
 
 class CoursesTreeView(
@@ -23,22 +21,18 @@ class CoursesTreeView(
         component.coursesTreeViewModel
     }
 
-    private val coursesTreeModel = CoursesTreeModel(
-        CoursesTreeNode.buildTreeWithNodes(emptyList())
-    )
-
     private val contextMenuActionListener: CourseTreeContextMenuActionListener =
         object : CourseTreeContextMenuActionListener {
-            override fun openTask(id: String) {
-                viewModel.onOpenTaskClick(id)
+            override fun openTask(courseId: String, taskId: String) {
+                viewModel.onOpenTaskClick(courseId, taskId)
             }
 
-            override fun downloadTaskFiles(id: String) {
-                viewModel.onDownloadTaskClick(id)
+            override fun downloadTaskFiles(courseId: String, taskId: String) {
+                viewModel.onDownloadTaskClick(courseId, taskId)
             }
 
-            override fun removeTaskFiles(id: String) {
-                viewModel.onRemoveTaskClick(id)
+            override fun removeTaskFiles(courseId: String, taskId: String) {
+                viewModel.onRemoveTaskClick(courseId, taskId)
             }
         }
 
@@ -54,16 +48,16 @@ class CoursesTreeView(
     }
 
     private fun bindEvents() {
-        viewModel.listOfCoursesState
-            .onEach { newCourses ->
-                refreshTree(newCourses)
+        viewModel.shouldTreeInvalidate
+            .onEach {
+                coursesTree.invalidate()
             }
             .launchIn(viewScope)
     }
 
     private fun createDialogPanel(): DialogPanel {
         val verticalFlowLayout = VerticalFlowLayout(/* fillHorizontally = */ true, /* fillVertically = */ true)
-        val component = JBScrollPane(BaseTreeView(coursesTreeModel, contextMenuActionListener).apply {
+        val component = JBScrollPane(BaseTreeView(viewModel.coursesTreeModel, contextMenuActionListener).apply {
             coursesTree = this
             isVisible = true
         })
@@ -71,10 +65,5 @@ class CoursesTreeView(
         return DialogPanel(verticalFlowLayout).apply {
             add(component)
         }
-    }
-
-    private fun refreshTree(courses: List<CourseVO>) {
-        coursesTreeModel.updateTree(courses)
-        coursesTree.invalidate()
     }
 }

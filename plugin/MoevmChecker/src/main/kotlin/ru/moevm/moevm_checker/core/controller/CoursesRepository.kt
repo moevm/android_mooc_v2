@@ -14,7 +14,7 @@ interface CoursesRepository {
 
     fun getTaskInfoFlow(courseId: String, taskId: String): Flow<CourseTask?>
 
-    fun findCourseAndTaskByTaskIdFlow(taskId: String): Flow<Pair<Course, CourseTask>?>
+    fun findCourseAndTaskByIdFlow(courseId: String, taskId: String): Flow<Pair<Course, CourseTask>?>
 }
 
 class CoursesRepositoryImpl(
@@ -48,24 +48,17 @@ class CoursesRepositoryImpl(
         emit(findTaskByCourseIdAndTaskId(courseId, taskId))
     }
 
-    override fun findCourseAndTaskByTaskIdFlow(taskId: String): Flow<Pair<Course, CourseTask>?> = flowSafe {
+    override fun findCourseAndTaskByIdFlow(courseId: String, taskId: String): Flow<Pair<Course, CourseTask>?> = flowSafe {
         if (coursesInfoMutableState.value == null) {
             initRepositoryFlow(false).last()
         }
         val courses = requireNotNull(coursesInfoMutableState.value?.courses)
-        var selectedTask: CourseTask? = null
-        var selectedCourse: Course? = null
-        for (course in courses) {
-            selectedTask = course.courseTasks.find { it.id == taskId }
-            if (selectedTask != null) {
-                selectedCourse = course
-                break
-            }
-        }
-        if (selectedCourse == null || selectedTask == null) {
+        val course = courses.find { course -> course.id == courseId }
+        val task = course?.courseTasks?.find { task -> task.id == taskId }
+        if (course == null || task == null) {
             emit(null)
         } else {
-            emit(selectedCourse to selectedTask)
+            emit(course to task)
         }
     }
 

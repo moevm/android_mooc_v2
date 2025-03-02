@@ -38,7 +38,7 @@ class AndroidTaskViewModel @Inject constructor(
     val taskResultData = taskResultDataMutable.asStateFlow()
     
     fun onViewCreated(courseId: String, taskId: String) {
-        taskManager.getTaskDescription(taskId)
+        taskManager.getTaskDescription(courseId, taskId)
             .onEach { description -> taskDescriptionMutable.value = description }
             .launchIn(viewModelScope)
     }

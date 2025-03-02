@@ -1,15 +1,15 @@
 package ru.moevm.moevm_checker.ui.courses_tree_content
 
 import ru.moevm.moevm_checker.ui.courses_tree_content.data.CourseVO
-import ru.moevm.moevm_checker.ui.courses_tree_content.tree.CoursesTreeNode
+import ru.moevm.moevm_checker.ui.courses_tree_content.tree.node.RootTreeNode
 import javax.swing.tree.DefaultTreeModel
 
 class CoursesTreeModel(
-    root: CoursesTreeNode
+    root: RootTreeNode,
 ): DefaultTreeModel(root) {
 
     fun updateTree(courses: List<CourseVO>) {
-        val newNodes = CoursesTreeNode.buildTreeWithNodes(courses)
-        setRoot(newNodes)
+        val root = RootTreeNode.buildTreeWithNodes(courses)
+        setRoot(root)
     }
 }
