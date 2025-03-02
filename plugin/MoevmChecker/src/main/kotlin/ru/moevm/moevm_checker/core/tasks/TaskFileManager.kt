@@ -15,8 +15,8 @@ import java.net.URL
 import java.util.zip.ZipFile
 
 interface TaskFileManager {
-    fun downloadTaskFiles(taskId: String): Flow<TaskDownloadStatus>
-    fun removeTaskFiles(taskId: String): Flow<TaskRemoveStatus>
+    fun downloadTaskFiles(courseId: String, taskId: String): Flow<TaskDownloadStatus>
+    fun removeTaskFiles(courseId: String, taskId: String): Flow<TaskRemoveStatus>
 }
 
 class TaskFileManagerImpl(
@@ -26,8 +26,8 @@ class TaskFileManagerImpl(
     private val projectConfig: ProjectConfigProvider
 ) : TaskFileManager {
 
-    override fun downloadTaskFiles(taskId: String): Flow<TaskDownloadStatus> = flowSafe {
-        val courseAndTask = coursesRepository.findCourseAndTaskByTaskIdFlow(taskId).last()
+    override fun downloadTaskFiles(courseId: String, taskId: String): Flow<TaskDownloadStatus> = flowSafe {
+        val courseAndTask = coursesRepository.findCourseAndTaskByIdFlow(courseId, taskId).last()
         if (courseAndTask == null) {
             emit(TaskDownloadStatus.FAILED_BEFORE_START)
             return@flowSafe
@@ -116,8 +116,8 @@ class TaskFileManagerImpl(
         }
     }
 
-    override fun removeTaskFiles(taskId: String): Flow<TaskRemoveStatus> = flowSafe {
-        val courseAndTask = coursesRepository.findCourseAndTaskByTaskIdFlow(taskId).last()
+    override fun removeTaskFiles(courseId: String, taskId: String): Flow<TaskRemoveStatus> = flowSafe {
+        val courseAndTask = coursesRepository.findCourseAndTaskByIdFlow(courseId, taskId).last()
         if (courseAndTask == null) {
             emit(
                 TaskRemoveStatus.FAILED_BEFORE_START

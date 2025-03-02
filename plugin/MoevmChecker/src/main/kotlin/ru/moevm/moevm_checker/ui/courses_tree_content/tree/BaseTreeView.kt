@@ -2,6 +2,7 @@ package ru.moevm.moevm_checker.ui.courses_tree_content.tree
 
 import com.intellij.ide.projectView.impl.ProjectViewTree
 import ru.moevm.moevm_checker.ui.courses_tree_content.CoursesItemType
+import ru.moevm.moevm_checker.ui.courses_tree_content.tree.node.TaskTreeNode
 import java.awt.Point
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
@@ -26,7 +27,7 @@ class BaseTreeView(
                     return
                 }
 
-                val itemByPoint = getTreeNodeByPoint(e.point)
+                val itemByPoint = getTaskTreeNodeByPoint(e.point)
                 itemByPoint?.let {
                     showContextMenu(itemByPoint, e.point)
                 }
@@ -40,26 +41,29 @@ class BaseTreeView(
         })
     }
 
-    private fun showContextMenu(node: CoursesTreeNode, point: Point) {
+    private fun showContextMenu(node: TaskTreeNode, point: Point) {
         val popupMenuItems = buildList {
-            if (isItemOpenable(node.coursesItemType)) {
+            if (isItemOpenable(node.taskType)) {
                 add(PopupAction("Открыть задачу") {
                     contextMenuActionListener.openTask(
-                        node.nodeId
+                        node.courseId,
+                        node.taskId,
                     )
                 })
             }
-            if (isItemDownloadable(node.coursesItemType)) {
+            if (isItemDownloadable(node.taskType)) {
                 add(PopupAction("Загрузить задачу") {
                     contextMenuActionListener.downloadTaskFiles(
-                        node.nodeId
+                        node.courseId,
+                        node.taskId,
                     )
                 })
             }
-            if (isItemRemovable(node.coursesItemType)) {
+            if (isItemRemovable(node.taskType)) {
                 add(PopupAction("Удалить файлы задачи") {
                     contextMenuActionListener.removeTaskFiles(
-                        node.nodeId
+                        node.courseId,
+                        node.taskId,
                     )
                 })
             }
@@ -84,14 +88,14 @@ class BaseTreeView(
         else -> false
     }
 
-    private fun getTreeNodeByPoint(point: Point): CoursesTreeNode? {
+    private fun getTaskTreeNodeByPoint(point: Point): TaskTreeNode? {
         val row = getRowForLocation(point.x, point.y)
         if (row == -1) {
             return null
         }
         val pathToRow = getPathForRow(row)
         val selectedNode = pathToRow.lastPathComponent
-        if (selectedNode is CoursesTreeNode) {
+        if (selectedNode is TaskTreeNode) {
             return selectedNode
         }
         return null

@@ -3,14 +3,17 @@ package ru.moevm.moevm_checker.ui.courses_tree_content
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.moevm.moevm_checker.core.controller.CoursesRepository
 import ru.moevm.moevm_checker.core.tasks.TaskFileManager
 import ru.moevm.moevm_checker.core.tasks.TaskManager
+import ru.moevm.moevm_checker.core.utils.coroutine.EventSharedFlow
 import ru.moevm.moevm_checker.dagger.Io
 import ru.moevm.moevm_checker.dagger.Ui
 import ru.moevm.moevm_checker.ui.BaseViewModel
 import ru.moevm.moevm_checker.ui.courses_tree_content.data.CourseVO
 import ru.moevm.moevm_checker.ui.courses_tree_content.data.TaskVO
+import ru.moevm.moevm_checker.ui.courses_tree_content.tree.node.RootTreeNode
 import javax.inject.Inject
 
 class CoursesTreeViewModel @Inject constructor(
@@ -21,8 +24,11 @@ class CoursesTreeViewModel @Inject constructor(
     @Io private val ioDispatcher: CoroutineDispatcher,
 ): BaseViewModel(uiDispatcher) {
 
-    private val listOfCoursesMutableState = MutableStateFlow<List<CourseVO>>(emptyList())
-    val listOfCoursesState = listOfCoursesMutableState.asStateFlow()
+    val coursesTreeModel = CoursesTreeModel(RootTreeNode.buildEmptyTree())
+
+    private val shouldTreeInvalidateMutable = EventSharedFlow<Unit>()
+    val shouldTreeInvalidate = shouldTreeInvalidateMutable.asSharedFlow()
+
 
     fun onViewCreated() {
         viewModelScope.launch {
@@ -35,37 +41,40 @@ class CoursesTreeViewModel @Inject constructor(
                         course.name,
                         course.courseTasks
                             .map { task ->
-                                TaskVO(task.id, task.name, task.type)
+                                TaskVO(course.id, task.id, task.name, task.type)
                             }
                     )
                 }
-            listOfCoursesMutableState.value = listOfCourses
+            withContext(uiDispatcher) {
+                coursesTreeModel.updateTree(listOfCourses)
+            }
+            shouldTreeInvalidateMutable.emit(Unit)
         }
     }
 
-    fun onOpenTaskClick(taskId: String) {
-        taskManager.openTask(taskId)
+    fun onOpenTaskClick(courseId: String, taskId: String) {
+        taskManager.openTask(courseId, taskId)
             .flowOn(ioDispatcher)
             .onEach {
-                println("opening task $taskId")
+                println("opening task $taskId in course $courseId")
             }
             .launchIn(viewModelScope)
     }
 
-    fun onDownloadTaskClick(taskId: String) {
-        taskFileManager.downloadTaskFiles(taskId)
+    fun onDownloadTaskClick(courseId: String, taskId: String) {
+        taskFileManager.downloadTaskFiles(courseId, taskId)
             .flowOn(ioDispatcher)
             .onEach {
-                println("downloading task $taskId, status = $it")
+                println("downloading task $taskId in course $courseId, status = $it")
             }
             .launchIn(viewModelScope)
     }
 
-    fun onRemoveTaskClick(taskId: String) {
-        taskFileManager.removeTaskFiles(taskId)
+    fun onRemoveTaskClick(courseId: String, taskId: String) {
+        taskFileManager.removeTaskFiles(courseId, taskId)
             .flowOn(ioDispatcher)
             .onEach {
-                println("removing task $taskId, status = $it")
+                println("removing task $taskId in course $courseId, status = $it")
             }
             .launchIn(viewModelScope)
     }
