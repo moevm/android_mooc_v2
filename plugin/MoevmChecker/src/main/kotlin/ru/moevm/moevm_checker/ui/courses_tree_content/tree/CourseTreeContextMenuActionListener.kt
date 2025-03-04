@@ -1,10 +1,12 @@
 package ru.moevm.moevm_checker.ui.courses_tree_content.tree
 
+import ru.moevm.moevm_checker.core.tasks.TaskReference
+
 interface CourseTreeContextMenuActionListener {
 
-    fun openTask(courseId: String, taskId: String)
+    fun openTask(taskReference: TaskReference)
 
-    fun downloadTaskFiles(courseId: String, taskId: String)
+    fun downloadTaskFiles(taskReference: TaskReference)
 
-    fun removeTaskFiles(courseId: String, taskId: String)
+    fun removeTaskFiles(taskReference: TaskReference)
 }

@@ -10,6 +10,7 @@ import kotlinx.coroutines.withContext
 import ru.moevm.moevm_checker.core.controller.CoursesRepository
 import ru.moevm.moevm_checker.core.data.ProjectConfigProvider
 import ru.moevm.moevm_checker.core.tasks.TaskManager
+import ru.moevm.moevm_checker.core.tasks.TaskReference
 import ru.moevm.moevm_checker.core.tasks.codetask.AbstractCheckSystem
 import ru.moevm.moevm_checker.dagger.AndroidCheckSystem
 import ru.moevm.moevm_checker.dagger.Io
@@ -38,7 +39,7 @@ class AndroidTaskViewModel @Inject constructor(
     val taskResultData = taskResultDataMutable.asStateFlow()
     
     fun onViewCreated(courseId: String, taskId: String) {
-        taskManager.getTaskDescription(courseId, taskId)
+        taskManager.getTaskDescription(TaskReference(courseId, taskId))
             .onEach { description -> taskDescriptionMutable.value = description }
             .launchIn(viewModelScope)
     }

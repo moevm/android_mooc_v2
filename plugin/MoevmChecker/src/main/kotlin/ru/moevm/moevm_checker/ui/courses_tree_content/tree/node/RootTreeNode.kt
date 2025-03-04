@@ -1,12 +1,13 @@
 package ru.moevm.moevm_checker.ui.courses_tree_content.tree.node
 
+import ru.moevm.moevm_checker.core.tasks.TaskReference
 import ru.moevm.moevm_checker.ui.courses_tree_content.data.CourseVO
 import ru.moevm.moevm_checker.ui.courses_tree_content.data.TaskVO
 import javax.swing.tree.DefaultMutableTreeNode
 
 class RootTreeNode private constructor(
     private val nodeId: String,
-    private val title: String,
+    val title: String,
 ) : DefaultMutableTreeNode(/* userObject = */ null, /* allowsChildren = */ true) {
 
     init {
@@ -50,10 +51,10 @@ class RootTreeNode private constructor(
 
         private fun fromTaskVO(courseVO: CourseVO, taskVO: TaskVO): TaskTreeNode {
             return TaskTreeNode(
-                courseVO.id,
-                taskVO.taskId,
+                TaskReference(courseVO.id, taskVO.taskId),
                 taskVO.name,
                 taskVO.type,
+                taskVO.fileStatus,
             )
         }
     }

@@ -9,12 +9,40 @@ import kotlinx.coroutines.withContext
 import ru.moevm.moevm_checker.core.controller.CoursesRepository
 import ru.moevm.moevm_checker.core.data.ProjectConfigProvider
 import ru.moevm.moevm_checker.core.utils.coroutine.flowSafe
+import ru.moevm.moevm_checker.ui.courses_tree_content.CoursesItemType
 import java.io.File
 import kotlin.io.path.Path
 
 interface TaskManager {
-    fun openTask(courseId: String, taskId: String): Flow<Unit>
-    fun getTaskDescription(courseId: String, taskId: String): Flow<String>
+    fun openTask(taskReference: TaskReference): Flow<Unit>
+    fun getTaskDescription(taskReference: TaskReference): Flow<String>
+
+    companion object {
+        @JvmStatic
+        fun isTaskOpenable(taskType: CoursesItemType) = when (taskType) {
+            CoursesItemType.CODE_TASK -> true
+            else -> false
+        }
+
+        @JvmStatic
+        fun isTaskDownloadable(taskType: CoursesItemType) = when (taskType) {
+            CoursesItemType.CODE_TASK -> true
+            else -> false
+        }
+
+        @JvmStatic
+        fun isTaskRemovable(taskType: CoursesItemType) = when (taskType) {
+            CoursesItemType.CODE_TASK -> true
+            else -> false
+        }
+
+        fun getCoursesItemType(taskType: String): CoursesItemType {
+            return when (taskType) {
+                CoursesItemType.CODE_TASK.type -> CoursesItemType.CODE_TASK
+                else -> CoursesItemType.UNKNOWN
+            }
+        }
+    }
 }
 
 class TaskManagerImpl(
@@ -23,10 +51,10 @@ class TaskManagerImpl(
     private val uiDispatcher: CoroutineDispatcher
 ) : TaskManager {
 
-    override fun openTask(courseId: String, taskId: String): Flow<Unit> = flowSafe {
+    override fun openTask(taskReference: TaskReference): Flow<Unit> = flowSafe {
         val projectDir = projectConfigProvider.rootDir ?: return@flowSafe
-        val (selectedCourse, _) = coursesRepository.findCourseAndTaskByIdFlow(courseId, taskId).last() ?: return@flowSafe
-        val taskName = TaskConstants.getTaskFileNameByTaskId(taskId)
+        val (selectedCourse, _) = coursesRepository.findCourseAndTaskByReferenceFlow(taskReference).last() ?: return@flowSafe
+        val taskName = TaskConstants.getTaskFileNameByTaskId(taskReference.taskId)
         val pathToTask = buildPath(projectDir, selectedCourse.name, taskName)
         println("open new task, path = $pathToTask")
         if (File(pathToTask).exists()) {
@@ -40,13 +68,13 @@ class TaskManagerImpl(
         }
     }
 
-    override fun getTaskDescription(courseId: String, taskId: String): Flow<String> = flowSafe {
+    override fun getTaskDescription(taskReference: TaskReference): Flow<String> = flowSafe {
         val taskDir = projectConfigProvider.rootDir
         if (taskDir == null) {
             emit("")
             return@flowSafe
         }
-        val courseAndTask = coursesRepository.findCourseAndTaskByIdFlow(courseId, taskId).last()
+        val courseAndTask = coursesRepository.findCourseAndTaskByReferenceFlow(taskReference).last()
         if (courseAndTask == null) {
             emit("")
             return@flowSafe
@@ -59,7 +87,7 @@ class TaskManagerImpl(
         }
     }
 
-    companion object {
+    private companion object {
         @JvmStatic
         private fun buildPath(vararg piece: String): String {
             return piece.fold("") { prev, new ->

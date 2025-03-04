@@ -15,8 +15,9 @@ import java.net.URL
 import java.util.zip.ZipFile
 
 interface TaskFileManager {
-    fun downloadTaskFiles(courseId: String, taskId: String): Flow<TaskDownloadStatus>
-    fun removeTaskFiles(courseId: String, taskId: String): Flow<TaskRemoveStatus>
+    fun isTaskFileExists(taskReference: TaskReference): Flow<Boolean>
+    fun downloadTaskFiles(taskReference: TaskReference): Flow<TaskDownloadStatus>
+    fun removeTaskFiles(taskReference: TaskReference): Flow<TaskRemoveStatus>
 }
 
 class TaskFileManagerImpl(
@@ -26,8 +27,21 @@ class TaskFileManagerImpl(
     private val projectConfig: ProjectConfigProvider
 ) : TaskFileManager {
 
-    override fun downloadTaskFiles(courseId: String, taskId: String): Flow<TaskDownloadStatus> = flowSafe {
-        val courseAndTask = coursesRepository.findCourseAndTaskByIdFlow(courseId, taskId).last()
+    override fun isTaskFileExists(taskReference: TaskReference): Flow<Boolean> = flowSafe {
+        val courseAndTask = coursesRepository.findCourseAndTaskByReferenceFlow(taskReference).last()
+        val rootDir = projectConfig.rootDir
+        if (courseAndTask == null || rootDir == null) {
+            emit(false)
+            return@flowSafe
+        }
+        val (course, _) = courseAndTask
+        val taskFileName = TaskConstants.getTaskFileNameByTaskId(taskReference.taskId)
+        val taskFolder = File(Utils.buildFilePath(rootDir, course.name, taskFileName))
+        emit(taskFolder.exists() && taskFolder.isDirectory && taskFolder.listFiles()?.isNotEmpty() == true)
+    }
+
+    override fun downloadTaskFiles(taskReference: TaskReference): Flow<TaskDownloadStatus> = flowSafe {
+        val courseAndTask = coursesRepository.findCourseAndTaskByReferenceFlow(taskReference).last()
         if (courseAndTask == null) {
             emit(TaskDownloadStatus.FAILED_BEFORE_START)
             return@flowSafe
@@ -40,8 +54,8 @@ class TaskFileManagerImpl(
             return@flowSafe
         }
 
-        val taskFileName = TaskConstants.getTaskFileNameByTaskId(taskId)
-        val zipArchiveName = TaskConstants.getTaskArchiveNameByTaskId(taskId)
+        val taskFileName = TaskConstants.getTaskFileNameByTaskId(taskReference.taskId)
+        val zipArchiveName = TaskConstants.getTaskArchiveNameByTaskId(taskReference.taskId)
         val outputCourseDir = Utils.buildFilePath(rootDir, course.name)
         val taskFolder = File(Utils.buildFilePath(rootDir, course.name, taskFileName))
         if (!taskFolder.exists()) {
@@ -52,13 +66,11 @@ class TaskFileManagerImpl(
             var file: File? = null
             when (fileStatus) {
                 is FileDownloadingStatus.Failed -> {
-                    println("downloading failed, taskid = $taskId, ${fileStatus.message}")
                     emit(TaskDownloadStatus.DOWNLOAD_FAILED)
                     return@flowSafe
                 }
 
                 FileDownloadingStatus.Downloading -> {
-                    println("downloading failed, taskid = $taskId, last state is Downloading")
                     emit(TaskDownloadStatus.DOWNLOAD_FAILED)
                     return@flowSafe
                 }
@@ -116,8 +128,8 @@ class TaskFileManagerImpl(
         }
     }
 
-    override fun removeTaskFiles(courseId: String, taskId: String): Flow<TaskRemoveStatus> = flowSafe {
-        val courseAndTask = coursesRepository.findCourseAndTaskByIdFlow(courseId, taskId).last()
+    override fun removeTaskFiles(taskReference: TaskReference): Flow<TaskRemoveStatus> = flowSafe {
+        val courseAndTask = coursesRepository.findCourseAndTaskByReferenceFlow(taskReference).last()
         if (courseAndTask == null) {
             emit(
                 TaskRemoveStatus.FAILED_BEFORE_START
@@ -130,7 +142,7 @@ class TaskFileManagerImpl(
             emit(TaskRemoveStatus.FAILED_BEFORE_START)
             return@flowSafe
         }
-        val taskFileName = TaskConstants.getTaskFileNameByTaskId(taskId)
+        val taskFileName = TaskConstants.getTaskFileNameByTaskId(taskReference.taskId)
         val taskFolder = File(Utils.buildFilePath(rootDir, course.name, taskFileName))
         emit(TaskRemoveStatus.REMOVING)
         if (taskFolder.deleteRecursively()) {
