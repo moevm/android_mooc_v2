@@ -71,6 +71,9 @@ class CoursesTreeView(
         val component = JBScrollPane(BaseTreeView(viewModel.coursesTreeModel, contextMenuActionListener).apply {
             cellRenderer = CoursesTreeCellRender()
             coursesTree = this
+            coursesTree.apply {
+                showsRootHandles = false
+            }
             isVisible = true
         })
 

@@ -1,5 +1,7 @@
 package ru.moevm.moevm_checker.ui.task.android
 
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.vfs.VirtualFileManager
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,15 +51,19 @@ class AndroidTaskViewModel @Inject constructor(
         isTestInProgressMutable.value = true
 
         val rootDir = projectConfigProvider.rootDir ?: throw IllegalStateException("rootDir == null")
-        viewModelScope.launch {
-            withContext(ioDispatcher) {
-                val result = checkSystem.rutTests(File(rootDir))
-                taskResultDataMutable.value = TaskResultData(
-                    result.result,
-                    result.stdout,
-                    result.stderr,
-                )
-                isTestInProgressMutable.value = false
+        // Сохранение всех открытых документов
+        FileDocumentManager.getInstance().saveAllDocuments()
+        VirtualFileManager.getInstance().asyncRefresh {
+            viewModelScope.launch {
+                withContext(ioDispatcher) {
+                    val result = checkSystem.rutTests(File(rootDir))
+                    taskResultDataMutable.value = TaskResultData(
+                        result.result,
+                        result.stdout,
+                        result.stderr,
+                    )
+                    isTestInProgressMutable.value = false
+                }
             }
         }
     }
