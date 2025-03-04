@@ -11,14 +11,6 @@ import javax.swing.JTree
 import javax.swing.tree.DefaultTreeCellRenderer
 
 class CoursesTreeCellRender : DefaultTreeCellRenderer() {
-    private val taskFileStatusToIcon = mapOf(
-        TaskFileStatus.NOT_DOWNLOADABLE to null,
-        TaskFileStatus.AVAILABLE to Icons.available,
-        TaskFileStatus.DOWNLOADING to Icons.progress,
-        TaskFileStatus.REMOVING to Icons.progress,
-        TaskFileStatus.DOWNLOADED to Icons.downloaded,
-        TaskFileStatus.OUTDATED to Icons.outdated,
-    )
 
     override fun getTreeCellRendererComponent(
         tree: JTree?,
@@ -45,5 +37,16 @@ class CoursesTreeCellRender : DefaultTreeCellRenderer() {
             }
         }
         return baseRenderer
+    }
+
+    companion object {
+        private val taskFileStatusToIcon = mapOf(
+            TaskFileStatus.NOT_DOWNLOADABLE to null,
+            TaskFileStatus.AVAILABLE to Icons.available,
+            TaskFileStatus.DOWNLOADING to Icons.progress,
+            TaskFileStatus.REMOVING to Icons.progress,
+            TaskFileStatus.DOWNLOADED to Icons.downloaded,
+            TaskFileStatus.OUTDATED to Icons.outdated,
+        )
     }
 }
