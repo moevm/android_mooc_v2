@@ -1,6 +1,7 @@
 package ru.moevm.moevm_checker.ui.courses_tree_content.tree
 
 import com.intellij.ide.projectView.impl.ProjectViewTree
+import ru.moevm.moevm_checker.core.tasks.TaskManager
 import ru.moevm.moevm_checker.ui.courses_tree_content.CoursesItemType
 import ru.moevm.moevm_checker.ui.courses_tree_content.tree.node.TaskTreeNode
 import java.awt.Point
@@ -45,26 +46,17 @@ class BaseTreeView(
         val popupMenuItems = buildList {
             if (isItemOpenable(node.taskType)) {
                 add(PopupAction("Открыть задачу") {
-                    contextMenuActionListener.openTask(
-                        node.courseId,
-                        node.taskId,
-                    )
+                    contextMenuActionListener.openTask(node.taskReference)
                 })
             }
             if (isItemDownloadable(node.taskType)) {
                 add(PopupAction("Загрузить задачу") {
-                    contextMenuActionListener.downloadTaskFiles(
-                        node.courseId,
-                        node.taskId,
-                    )
+                    contextMenuActionListener.downloadTaskFiles(node.taskReference)
                 })
             }
             if (isItemRemovable(node.taskType)) {
                 add(PopupAction("Удалить файлы задачи") {
-                    contextMenuActionListener.removeTaskFiles(
-                        node.courseId,
-                        node.taskId,
-                    )
+                    contextMenuActionListener.removeTaskFiles(node.taskReference)
                 })
             }
         }
@@ -73,20 +65,14 @@ class BaseTreeView(
         popupMenu.show(this, point.x, point.y)
     }
 
-    private fun isItemOpenable(coursesItemType: CoursesItemType) = when (coursesItemType) {
-        CoursesItemType.CODE_TASK -> true
-        else -> false
-    }
+    private fun isItemOpenable(coursesItemType: CoursesItemType) =
+        TaskManager.isTaskOpenable(coursesItemType)
 
-    private fun isItemDownloadable(coursesItemType: CoursesItemType) = when (coursesItemType) {
-        CoursesItemType.CODE_TASK -> true
-        else -> false
-    }
+    private fun isItemDownloadable(coursesItemType: CoursesItemType) =
+        TaskManager.isTaskDownloadable(coursesItemType)
 
-    private fun isItemRemovable(coursesItemType: CoursesItemType) = when (coursesItemType) {
-        CoursesItemType.CODE_TASK -> true
-        else -> false
-    }
+    private fun isItemRemovable(coursesItemType: CoursesItemType) =
+        TaskManager.isTaskRemovable(coursesItemType)
 
     private fun getTaskTreeNodeByPoint(point: Point): TaskTreeNode? {
         val row = getRowForLocation(point.x, point.y)
