@@ -12,9 +12,12 @@ import ru.moevm.moevm_checker.dagger.Ui
 import ru.moevm.moevm_checker.ui.BaseViewModel
 import ru.moevm.moevm_checker.ui.courses_tree_content.data.CourseVO
 import ru.moevm.moevm_checker.ui.courses_tree_content.data.TaskVO
+import ru.moevm.moevm_checker.ui.courses_tree_content.tree.node.CoursesTreeNode
 import ru.moevm.moevm_checker.ui.courses_tree_content.tree.node.RootTreeNode
+import ru.moevm.moevm_checker.ui.courses_tree_content.tree.node.TaskTreeNode
 import ru.moevm.moevm_checker.utils.ObservableList
 import javax.inject.Inject
+import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
 
 class CoursesTreeViewModel @Inject constructor(
@@ -29,6 +32,12 @@ class CoursesTreeViewModel @Inject constructor(
 
     private val shouldTreeInvalidateMutable = EventSharedFlow<Unit>()
     val shouldTreeInvalidate = shouldTreeInvalidateMutable.asSharedFlow()
+
+    private val isDescriptionLoadingMutable = MutableStateFlow(false)
+    val isDescriptionLoading = isDescriptionLoadingMutable.asStateFlow()
+    private val descriptionMutable = MutableStateFlow<String?>(null)
+    val taskDescription = descriptionMutable.asStateFlow()
+    private var descriptionLoadingJob: Job? = null
 
     private val shouldTreeRepaintMutable = MutableSharedFlow<List<TreePath>>()
     val shouldTreeRepaint = shouldTreeRepaintMutable.asSharedFlow()
@@ -96,6 +105,37 @@ class CoursesTreeViewModel @Inject constructor(
         }
     } else {
         TaskFileStatus.NOT_DOWNLOADABLE
+    }
+
+    fun onCourseTreeNodeChanged(newNode: DefaultMutableTreeNode?) {
+        descriptionMutable.value = null
+        descriptionLoadingJob?.cancel()
+        when (newNode) {
+            is CoursesTreeNode -> {
+                isDescriptionLoadingMutable.value = true
+                val courseId = newNode.courseId
+                descriptionLoadingJob = coursesRepository.getCourseDescriptionFlow(courseId)
+                    .flowOn(ioDispatcher)
+                    .onEach { description ->
+                        println("course $courseId description updated:\n$description")
+                        descriptionMutable.value = description
+                        isDescriptionLoadingMutable.value = false
+                    }
+                    .launchIn(viewModelScope)
+            }
+            is TaskTreeNode -> {
+                isDescriptionLoadingMutable.value = true
+                val taskReference = newNode.taskReference
+                descriptionLoadingJob = coursesRepository.getTaskDescriptionFlow(taskReference)
+                    .flowOn(ioDispatcher)
+                    .onEach { description ->
+                        println("task ${taskReference.taskId} in course\n${taskReference.courseId} description updated: $description")
+                        descriptionMutable.value = description
+                        isDescriptionLoadingMutable.value = false
+                    }
+                    .launchIn(viewModelScope)
+            }
+        }
     }
 
     fun onOpenTaskClick(taskReference: TaskReference) {
