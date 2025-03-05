@@ -1,6 +1,8 @@
 package ru.moevm.moevm_checker.core.controller
 
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.isActive
 import ru.moevm.moevm_checker.core.data.course.Course
 import ru.moevm.moevm_checker.core.data.course.CourseTask
 import ru.moevm.moevm_checker.core.data.course.CoursesInfo
@@ -13,7 +15,11 @@ interface CoursesRepository {
 
     fun getCoursesInfoFlow(): Flow<CoursesInfo?>
 
+    fun getCourseDescriptionFlow(courseId: String): Flow<String?>
+
     fun getTaskInfoFlow(taskReference: TaskReference): Flow<CourseTask?>
+
+    fun getTaskDescriptionFlow(taskReference: TaskReference): Flow<String?>
 
     fun findCourseAndTaskByReferenceFlow(taskReference: TaskReference): Flow<Pair<Course, CourseTask>?>
 
@@ -44,12 +50,37 @@ class CoursesRepositoryImpl(
         emit(coursesInfoMutableState.value)
     }
 
+    override fun getCourseDescriptionFlow(courseId: String): Flow<String?> = flowSafe {
+        if (coursesInfoMutableState.value == null) {
+            initRepositoryFlow(false).last()
+        }
+        val courseDescriptionUrl =
+            coursesInfoMutableState.value?.courses?.find { course -> course.id == courseId }?.courseDescriptionUrl
+        val id = courseDescriptionUrl?.substringAfter("id=", "")?.substringBefore("&")
+        if (currentCoroutineContext().isActive) {
+            val result = id?.let { courseId -> googleFilesApi.getDescriptionByLinkParams(id = courseId).string() }
+            emit(result)
+        }
+    }
+
     override fun getTaskInfoFlow(taskReference: TaskReference): Flow<CourseTask?> = flowSafe {
         if (coursesInfoMutableState.value == null) {
             initRepositoryFlow(false).last()
         }
         val task = findTaskByReferenceFlow(taskReference).last()
         emit(task)
+    }
+
+    override fun getTaskDescriptionFlow(taskReference: TaskReference): Flow<String?> = flowSafe {
+        if (coursesInfoMutableState.value == null) {
+            initRepositoryFlow(false).last()
+        }
+        val taskDescriptionUrl = findTaskByReferenceFlow(taskReference).single()?.taskDescriptionUrl
+        val id = taskDescriptionUrl?.substringAfter("id=", "")?.substringBefore("&")
+        if (currentCoroutineContext().isActive) {
+            val result = id?.let { taskId -> googleFilesApi.getDescriptionByLinkParams(id = taskId).string() }
+            emit(result)
+        }
     }
 
     override fun findCourseAndTaskByReferenceFlow(taskReference: TaskReference): Flow<Pair<Course, CourseTask>?> = flowSafe {
