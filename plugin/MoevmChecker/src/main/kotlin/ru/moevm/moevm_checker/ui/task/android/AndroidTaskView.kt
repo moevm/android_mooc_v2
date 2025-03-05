@@ -19,6 +19,7 @@ import ru.moevm.moevm_checker.dagger.PluginComponent
 import ru.moevm.moevm_checker.ui.BaseView
 import ru.moevm.moevm_checker.ui.DialogPanelData
 import javax.swing.JEditorPane
+import javax.swing.JLabel
 import javax.swing.text.JTextComponent
 
 class AndroidTaskView(
@@ -28,7 +29,8 @@ class AndroidTaskView(
 ) : BaseView() {
 
     /*  UI Components   */
-    private lateinit var htmlTaskProblem: JEditorPane
+    private lateinit var htmlTaskProblemEditor: JEditorPane
+    private lateinit var loadingProblemSpinner: JLabel
     private lateinit var textResult: Cell<JEditorPane>
     private lateinit var textStdout: Cell<JBTextArea>
     private lateinit var textStderr: Cell<JBTextArea>
@@ -49,7 +51,13 @@ class AndroidTaskView(
     private fun bindEvents() {
         viewModel.taskDescription
             .onEach { description ->
-                htmlTaskProblem.setHtmlBody(description?.let { convertMarkdownToHtml(description) } ?: "")
+                htmlTaskProblemEditor.setHtmlBody(description?.let { convertMarkdownToHtml(description) } ?: "")
+            }
+            .launchIn(viewScope)
+        viewModel.isDescriptionLoading
+            .onEach { isLoading ->
+                loadingProblemSpinner.isVisible = isLoading
+                htmlTaskProblemEditor.isVisible = !isLoading
             }
             .launchIn(viewScope)
 
@@ -84,10 +92,14 @@ class AndroidTaskView(
         group(title = "Problem") {
             row {
                 cell(SimpleHtmlPane("").apply {
-                    htmlTaskProblem = this
-                    visible(true)
+                    htmlTaskProblemEditor = this
                     isEditable = false
+                    visible(false)
                 })
+                icon(AnimatedIcon.Default()).applyToComponent {
+                    loadingProblemSpinner = this
+                    visible(true)
+                }
             }
             row {
                 button("Проверить") {

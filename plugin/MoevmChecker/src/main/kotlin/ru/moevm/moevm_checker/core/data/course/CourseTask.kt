@@ -15,5 +15,7 @@ data class CourseTask(
     @SerializedName("type")
     val type: String,
     @SerializedName("version")
-    val version: String
+    val version: String,
+    @SerializedName("task_description_url")
+    val taskDescriptionUrl: String
 )

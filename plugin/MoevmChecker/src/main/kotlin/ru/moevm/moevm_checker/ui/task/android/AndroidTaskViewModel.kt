@@ -31,6 +31,8 @@ class AndroidTaskViewModel @Inject constructor(
     @Io private val ioDispatcher: CoroutineDispatcher,
 ) : BaseViewModel(uiDispatcher) {
 
+    private val isDescriptionLoadingMutable = MutableStateFlow(false)
+    val isDescriptionLoading = isDescriptionLoadingMutable.asStateFlow()
     private val taskDescriptionMutable = MutableStateFlow<String?>(null)
     val taskDescription = taskDescriptionMutable.asStateFlow()
 
@@ -41,8 +43,12 @@ class AndroidTaskViewModel @Inject constructor(
     val taskResultData = taskResultDataMutable.asStateFlow()
     
     fun onViewCreated(courseId: String, taskId: String) {
+        isDescriptionLoadingMutable.value = true
         taskManager.getTaskDescription(TaskReference(courseId, taskId))
-            .onEach { description -> taskDescriptionMutable.value = description }
+            .onEach { description ->
+                taskDescriptionMutable.value = description
+                isDescriptionLoadingMutable.value = false
+            }
             .launchIn(viewModelScope)
     }
 
