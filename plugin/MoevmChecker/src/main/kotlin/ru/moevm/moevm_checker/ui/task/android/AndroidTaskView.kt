@@ -70,13 +70,13 @@ class AndroidTaskView(
         viewModel.taskResultData
             .onEach {
                 textResult.apply {
-                    showAndSetOrHideAndClearText(it?.taskResult?.toString())
-                    if (it?.taskResult != null) {
-                        addColorByResult(it.taskResult)
+                    showAndSetOrHideAndClearText(it?.result?.toString())
+                    if (it?.result != null) {
+                        addColorByResult(it.result)
                     }
                 }
-                textStdout.showAndSetOrHideAndClearText(it?.taskStdoutText)
-                textStderr.showAndSetOrHideAndClearText(it?.taskStderrText)
+                textStdout.showAndSetOrHideAndClearText(it?.stdout)
+                textStderr.showAndSetOrHideAndClearText(it?.stderr)
             }
             .launchIn(viewScope)
     }

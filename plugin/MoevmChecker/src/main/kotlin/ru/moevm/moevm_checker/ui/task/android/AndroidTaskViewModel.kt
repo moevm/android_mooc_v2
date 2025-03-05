@@ -3,18 +3,16 @@ package ru.moevm.moevm_checker.ui.task.android
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.vfs.VirtualFileManager
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.moevm.moevm_checker.core.controller.CoursesRepository
 import ru.moevm.moevm_checker.core.data.ProjectConfigProvider
 import ru.moevm.moevm_checker.core.tasks.TaskManager
 import ru.moevm.moevm_checker.core.tasks.TaskReference
-import ru.moevm.moevm_checker.core.tasks.codetask.AbstractCheckSystem
-import ru.moevm.moevm_checker.dagger.AndroidCheckSystem
+import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
+import ru.moevm.moevm_checker.core.tasks.codetask.CodeTaskFactory
+import ru.moevm.moevm_checker.core.tasks.codetask.TaskCodeEnvironment
 import ru.moevm.moevm_checker.dagger.Io
 import ru.moevm.moevm_checker.dagger.Ui
 import ru.moevm.moevm_checker.ui.BaseViewModel
@@ -26,7 +24,6 @@ class AndroidTaskViewModel @Inject constructor(
     private val projectConfigProvider: ProjectConfigProvider,
     private val coursesRepository: CoursesRepository,
     private val taskManager: TaskManager,
-    @AndroidCheckSystem private val checkSystem: AbstractCheckSystem,
     @Ui uiDispatcher: CoroutineDispatcher,
     @Io private val ioDispatcher: CoroutineDispatcher,
 ) : BaseViewModel(uiDispatcher) {
@@ -41,10 +38,13 @@ class AndroidTaskViewModel @Inject constructor(
 
     private val taskResultDataMutable = MutableStateFlow<TaskResultData?>(null)
     val taskResultData = taskResultDataMutable.asStateFlow()
-    
+
+    private lateinit var taskReference: TaskReference
+
     fun onViewCreated(courseId: String, taskId: String) {
+        taskReference = TaskReference(courseId, taskId)
         isDescriptionLoadingMutable.value = true
-        taskManager.getTaskDescription(TaskReference(courseId, taskId))
+        taskManager.getTaskDescription(taskReference)
             .onEach { description ->
                 taskDescriptionMutable.value = description
                 isDescriptionLoadingMutable.value = false
@@ -56,18 +56,41 @@ class AndroidTaskViewModel @Inject constructor(
         taskResultDataMutable.value = null
         isTestInProgressMutable.value = true
 
-        val rootDir = projectConfigProvider.rootDir ?: throw IllegalStateException("rootDir == null")
+        if (projectConfigProvider.rootDir == null) {
+            taskResultDataMutable.value = TaskResultData(
+                CheckResult.Error("Task folder didn't recognize"),
+                "",
+                "",
+            )
+            return
+        }
         // Сохранение всех открытых документов
         FileDocumentManager.getInstance().saveAllDocuments()
         VirtualFileManager.getInstance().asyncRefresh {
             viewModelScope.launch {
                 withContext(ioDispatcher) {
-                    val result = checkSystem.rutTests(File(rootDir))
-                    taskResultDataMutable.value = TaskResultData(
-                        result.result,
-                        result.stdout,
-                        result.stderr,
-                    )
+                    val taskDir = projectConfigProvider.rootDir
+                    val taskData = coursesRepository.findTaskByReferenceFlow(taskReference).single()
+                    if (taskDir == null || taskData == null) {
+                        taskResultDataMutable.value = TaskResultData(
+                            CheckResult.Error("Task folder didn't recognize"),
+                            "",
+                            "",
+                        )
+                    } else {
+                        val codeTask = CodeTaskFactory.create(
+                            TaskCodeEnvironment.Android(
+                                File(taskDir),
+                                projectConfigProvider.jdkPath
+                            ), taskData.taskArgs
+                        )
+                        val codeTaskResult = codeTask.execute()
+                        taskResultDataMutable.value = TaskResultData(
+                            codeTaskResult.result,
+                            codeTaskResult.stdout,
+                            codeTaskResult.stderr,
+                        )
+                    }
                     isTestInProgressMutable.value = false
                 }
             }
