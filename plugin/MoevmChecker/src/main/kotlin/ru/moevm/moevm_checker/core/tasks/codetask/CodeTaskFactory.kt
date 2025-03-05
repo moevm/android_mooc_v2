@@ -5,10 +5,10 @@ import ru.moevm.moevm_checker.core.tasks.codetask.platforms.android.AndroidTask
 
 object CodeTaskFactory {
 
-    fun create(environment: TaskCodeEnvironment): AbstractCodeTask {
+    fun create(environment: TaskCodeEnvironment, taskArgs: List<String>): AbstractCodeTask {
         return when (environment) {
             is TaskCodeEnvironment.Android -> {
-                AndroidTask(environment.taskFolder, AndroidCodeTaskCheckSystem(environment.jdkPath))
+                AndroidTask(environment.taskFolder, AndroidCodeTaskCheckSystem(environment.jdkPath, taskArgs))
             }
         }
     }

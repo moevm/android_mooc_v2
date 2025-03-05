@@ -6,7 +6,7 @@ import com.intellij.execution.process.CapturingProcessHandler
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.io.FileUtil
 import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
-import ru.moevm.moevm_checker.core.tasks.codetask.CodeTestResult
+import ru.moevm.moevm_checker.core.tasks.codetask.CodeTaskResult
 import ru.moevm.moevm_checker.core.tasks.codetask.platforms.android.GradleConstants.GRADLE_WRAPPER_UNIX
 import ru.moevm.moevm_checker.core.tasks.codetask.platforms.android.GradleConstants.GRADLE_WRAPPER_WIN
 
@@ -15,21 +15,21 @@ class GradleCommandLine(
     private val command: String
 ) {
 
-    fun launch(timeoutMs: Int = TASK_TIMEOUT_MS): CodeTestResult {
+    fun launch(timeoutMs: Int = TASK_TIMEOUT_MS): CodeTaskResult {
         val output = try {
             val handler = CapturingProcessHandler(cmd)
             handler.runProcess(timeoutMs)
         } catch (e: ExecutionException) {
-            return CodeTestResult(isSuccess = false, CheckResult.Error("Test launch error"), "", "${e.message}")
+            return CodeTaskResult(CheckResult.Error("Test launch error"), "", "${e.message}")
         }
 
         val stderr = output.stderr
         val stdout = output.stdout
         if (!isTaskPassed(stderr, stdout)) {
-            return CodeTestResult(false, CheckResult.Failed, stdout, stderr)
+            return CodeTaskResult(CheckResult.Failed, stdout, stderr)
         }
 
-        return CodeTestResult(true, CheckResult.Passed, stdout, stderr)
+        return CodeTaskResult(CheckResult.Passed, stdout, stderr)
     }
 
     private fun isTaskPassed(
@@ -38,7 +38,7 @@ class GradleCommandLine(
     ): Boolean {
         return when {
             stderr.isNotEmpty() && stdout.isEmpty() -> false
-            GradleStderrAnalyzer.tryToGetCheckResult(stderr) != null -> false
+            GradleStderrAnalyzer.isStderrContainsError(stderr) -> false
             !stdout.contains(command) -> false
             else -> true
         }
