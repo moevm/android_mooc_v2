@@ -1,30 +1,33 @@
 package ru.moevm.moevm_checker.ui.courses_tree_content
 
-import com.intellij.collaboration.ui.SimpleHtmlPane
-import com.intellij.collaboration.ui.setHtmlBody
+import com.intellij.markdown.utils.convertMarkdownToHtml
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.ui.AnimatedIcon
 import com.intellij.ui.components.JBScrollPane
-import com.intellij.ui.dsl.builder.*
+import com.intellij.ui.dsl.builder.Align
+import com.intellij.ui.dsl.builder.BottomGap
+import com.intellij.ui.dsl.builder.panel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import org.intellij.markdown.flavours.commonmark.CommonMarkFlavourDescriptor
-import org.intellij.markdown.html.HtmlGenerator
-import org.intellij.markdown.parser.MarkdownParser
 import ru.moevm.moevm_checker.core.tasks.TaskReference
 import ru.moevm.moevm_checker.core.utils.simpleLazy
 import ru.moevm.moevm_checker.dagger.PluginComponent
 import ru.moevm.moevm_checker.ui.BaseView
 import ru.moevm.moevm_checker.ui.DialogPanelData
+import ru.moevm.moevm_checker.ui.HtmlTextPreviewPanel
 import ru.moevm.moevm_checker.ui.courses_tree_content.tree.BaseTreeView
 import ru.moevm.moevm_checker.ui.courses_tree_content.tree.CourseTreeContextMenuActionListener
 import ru.moevm.moevm_checker.ui.courses_tree_content.tree.CoursesTreeCellRender
-import javax.swing.JEditorPane
+import java.awt.event.ComponentEvent
+import java.awt.event.ComponentListener
 import javax.swing.JLabel
+import javax.swing.JPanel
 import javax.swing.JTree
 import javax.swing.event.TreeSelectionListener
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
+
+private const val COURSES_TREE_HEIGHT = 400
 
 class CoursesTreeView(
     private val component: PluginComponent,
@@ -53,10 +56,27 @@ class CoursesTreeView(
         viewModel.onCourseTreeNodeChanged(event.newLeadSelectionPath.lastPathComponent as DefaultMutableTreeNode?)
     }
 
+    private val mainPanelComponentListener = object : ComponentListener {
+        override fun componentResized(e: ComponentEvent?) {
+            val width = e?.component?.width ?: return
+            courseDescriptionPreview.updateSize(width)
+        }
+
+        override fun componentMoved(e: ComponentEvent?) {}
+
+        override fun componentShown(e: ComponentEvent?) {
+            val width = e?.component?.width ?: return
+            courseDescriptionPreview.updateSize(width)
+        }
+
+        override fun componentHidden(e: ComponentEvent?) {}
+    }
+
     /*  UI Components   */
     private lateinit var coursesTree: JTree
-    private lateinit var htmlPreviewEditor: JEditorPane
+    private lateinit var courseDescriptionPreview: HtmlTextPreviewPanel
     private lateinit var loadingPreviewSpinner: JLabel
+    private lateinit var mainPanel: JPanel
 
 
     override fun getDialogPanel(): DialogPanelData {
@@ -82,12 +102,12 @@ class CoursesTreeView(
 
         viewModel.taskDescription
             .onEach { description ->
-                htmlPreviewEditor.setHtmlBody(description?.let { convertMarkdownToHtml(description) } ?: "")
+                courseDescriptionPreview.updateText(convertMarkdownToHtml(description ?: ""))
             }
             .launchIn(viewScope)
         viewModel.isDescriptionLoading
             .onEach { isLoading ->
-                htmlPreviewEditor.isVisible = !isLoading
+                courseDescriptionPreview.isVisible = !isLoading
                 loadingPreviewSpinner.isVisible = isLoading
             }.launchIn(viewScope)
     }
@@ -102,26 +122,30 @@ class CoursesTreeView(
             }
             isVisible = true
         }).apply {
-            preferredSize = preferredSize.apply { height = 400 }
+            preferredSize = preferredSize.apply { height = COURSES_TREE_HEIGHT }
         }
 
         return panel {
             row {
                 cell(component).align(Align.FILL)
             }.bottomGap(BottomGap.SMALL)
-            group(title = "Preview") {
+            group(title = "Preview", indent = false) {
                 row {
-                    cell(SimpleHtmlPane("").apply {
-                        htmlPreviewEditor = this
-                        isEditable = false
-                        visible(true)
-                    })
+                    cell(HtmlTextPreviewPanel())
+                        .applyToComponent {
+                            courseDescriptionPreview = this
+                            visible(true)
+                        }
+                        .align(Align.FILL)
                     icon(AnimatedIcon.Default()).applyToComponent {
                         loadingPreviewSpinner = this
                         visible(false)
-                    }
-                }
-            }
+                    }.align(Align.FILL)
+                }.resizableRow()
+            }.resizableRow()
+        }.apply {
+            mainPanel = this
+            addComponentListener(mainPanelComponentListener)
         }
     }
 
@@ -134,15 +158,9 @@ class CoursesTreeView(
         }
     }
 
-    private fun convertMarkdownToHtml(markdown: String): String {
-        val flavour = CommonMarkFlavourDescriptor()
-        val parsedTree = MarkdownParser(flavour).buildMarkdownTreeFromString(markdown)
-        val html = HtmlGenerator(markdown, parsedTree, flavour).generateHtml()
-        return html
-    }
-
     override fun destroy() {
         coursesTree.removeTreeSelectionListener(treeSelectionListener)
+        mainPanel.removeComponentListener(mainPanelComponentListener)
         super.destroy()
     }
 }
