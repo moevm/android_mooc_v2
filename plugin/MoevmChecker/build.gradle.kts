@@ -1,7 +1,9 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm")
-    id("org.jetbrains.intellij")
+    id("org.jetbrains.intellij.platform")
     id("com.google.devtools.ksp")
 }
 
@@ -10,15 +12,9 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
-}
-
-// Configure Gradle IntelliJ Plugin
-// Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
-intellij {
-    version.set("2024.1.1.1")
-    type.set("AI") // Target IDE Platform
-
-    plugins.set(listOf("android"))
+    intellijPlatform{
+        defaultRepositories()
+    }
 }
 
 tasks {
@@ -29,13 +25,13 @@ tasks {
         sourceCompatibility = "17"
         targetCompatibility = "17"
     }
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-        kotlinOptions.jvmTarget = "17"
+    kotlin {
+        compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
     }
 
     patchPluginXml {
-        sinceBuild.set("223")
-        untilBuild.set("242.*")
+        sinceBuild.set("243")
+        untilBuild.set("243.*")
     }
 
     signPlugin {
@@ -61,4 +57,10 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.google.dagger:dagger:2.50")
     ksp("com.google.dagger:dagger-compiler:2.50") // Dagger compiler
+
+    intellijPlatform {
+        androidStudio("2024.3.1.13")
+        bundledPlugin("org.jetbrains.android")
+        instrumentationTools()
+    }
 }
