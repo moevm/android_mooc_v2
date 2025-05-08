@@ -1,5 +1,6 @@
 package ru.moevm.moevm_checker.core.tasks.codetask.platforms.android
 
+import kotlinx.coroutines.Dispatchers
 import ru.moevm.moevm_checker.core.tasks.codetask.AbstractCheckSystem
 import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
 import ru.moevm.moevm_checker.core.tasks.codetask.CodeTaskResult
@@ -25,6 +26,12 @@ class AndroidCodeTaskCheckSystem(
             return CodeTaskResult(CheckResult.Error("JDK Not found"), "", "")
         }
         val checkResults = mutableListOf<Pair<String, CodeTaskResult>>()
+        val logcatCollector = LogcatCollector()
+        if (taskArgs.isNotEmpty()) {
+            logcatCollector.start({ line ->
+                line.contains("CHECKER")
+            }, Dispatchers.IO)
+        }
         for (arg in taskArgs) {
             when (arg) {
                 "unit_test" -> {
@@ -43,6 +50,7 @@ class AndroidCodeTaskCheckSystem(
                 }
             }
         }
+        val probablyResultCode = logcatCollector.collect().lastOrNull()?.takeLastWhile { it != ' ' }
         return if (checkResults.all { it.second.result is CheckResult.Passed }) {
             CodeTaskResult(
                 CheckResult.Passed,
@@ -52,7 +60,8 @@ class AndroidCodeTaskCheckSystem(
                         ""
                     } else {
                         "${it.first}:\n\n" + it.second.stderr }
-                }.ifBlank { "" }
+                }.ifBlank { "" },
+                probablyResultCode
             )
         } else {
             CodeTaskResult(CheckResult.Failed, "", "Unknown error")

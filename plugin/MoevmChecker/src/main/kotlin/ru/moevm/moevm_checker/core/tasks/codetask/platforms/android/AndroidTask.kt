@@ -15,6 +15,7 @@ class AndroidTask(
             result = result.result,
             stdout = result.stdout,
             stderr = result.stderr,
+            probablyResultCode = result.probablyResultCode,
         )
     }
 }

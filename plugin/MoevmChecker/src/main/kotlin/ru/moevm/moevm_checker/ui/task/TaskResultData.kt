@@ -6,4 +6,5 @@ data class TaskResultData(
     val result: CheckResult,
     val stdout: String,
     val stderr: String,
+    val taskResultCode: String? = null,
 )

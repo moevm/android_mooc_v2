@@ -10,6 +10,7 @@ import ru.moevm.moevm_checker.core.controller.CoursesRepository
 import ru.moevm.moevm_checker.core.data.ProjectConfigProvider
 import ru.moevm.moevm_checker.core.tasks.TaskManager
 import ru.moevm.moevm_checker.core.tasks.TaskReference
+import ru.moevm.moevm_checker.core.tasks.TaskResultCodeEncoder
 import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
 import ru.moevm.moevm_checker.core.tasks.codetask.CodeTaskFactory
 import ru.moevm.moevm_checker.core.tasks.codetask.TaskCodeEnvironment
@@ -40,6 +41,7 @@ class AndroidTaskViewModel @Inject constructor(
     val taskResultData = taskResultDataMutable.asStateFlow()
 
     private lateinit var taskReference: TaskReference
+    private val resultEncoder = TaskResultCodeEncoder()
 
     fun onViewCreated(courseId: String, taskId: String) {
         taskReference = TaskReference(courseId, taskId)
@@ -89,6 +91,13 @@ class AndroidTaskViewModel @Inject constructor(
                             codeTaskResult.result,
                             codeTaskResult.stdout,
                             codeTaskResult.stderr,
+                            codeTaskResult.probablyResultCode?.let {
+                                resultEncoder.encode(
+                                    taskReference,
+                                    timestamp = System.currentTimeMillis(),
+                                    codeTaskResult.probablyResultCode
+                                )
+                            }
                         )
                     }
                     isTestInProgressMutable.value = false

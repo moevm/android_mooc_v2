@@ -1,25 +1,27 @@
 package ru.moevm.moevm_checker.ui.task.android
 
 import com.android.tools.idea.appinspection.inspectors.network.view.details.createVerticalScrollPane
-import com.intellij.collaboration.ui.SimpleHtmlPane
-import com.intellij.collaboration.ui.setHtmlBody
 import com.intellij.ui.AnimatedIcon
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.dsl.builder.*
-import com.intellij.util.ui.JBEmptyBorder
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.intellij.markdown.flavours.commonmark.CommonMarkFlavourDescriptor
 import org.intellij.markdown.html.HtmlGenerator
 import org.intellij.markdown.parser.MarkdownParser
+import ru.moevm.moevm_checker.core.tasks.TaskResultCodeEncoder
 import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
 import ru.moevm.moevm_checker.core.utils.simpleLazy
 import ru.moevm.moevm_checker.dagger.PluginComponent
 import ru.moevm.moevm_checker.ui.BaseView
 import ru.moevm.moevm_checker.ui.DialogPanelData
+import ru.moevm.moevm_checker.ui.HtmlTextPreviewPanel
+import java.awt.event.ComponentEvent
+import java.awt.event.ComponentListener
 import javax.swing.JEditorPane
 import javax.swing.JLabel
+import javax.swing.JPanel
 import javax.swing.text.JTextComponent
 
 class AndroidTaskView(
@@ -29,16 +31,35 @@ class AndroidTaskView(
 ) : BaseView() {
 
     /*  UI Components   */
-    private lateinit var htmlTaskProblemEditor: JEditorPane
+    private lateinit var taskDescriptionPreview: HtmlTextPreviewPanel
     private lateinit var loadingProblemSpinner: JLabel
     private lateinit var textResult: Cell<JEditorPane>
+    private lateinit var textTaskResultCode: Cell<JBTextArea>
     private lateinit var textStdout: Cell<JBTextArea>
     private lateinit var textStderr: Cell<JBTextArea>
     private lateinit var testing: Row
+    private lateinit var mainPanel: JPanel
 
     override val viewModel: AndroidTaskViewModel by simpleLazy {
         component.androidTaskViewModel
     }
+
+    private val mainPanelComponentListener = object : ComponentListener {
+        override fun componentResized(e: ComponentEvent?) {
+            val width = e?.component?.width ?: return
+            taskDescriptionPreview.updateSize(width)
+        }
+
+        override fun componentMoved(e: ComponentEvent?) {}
+
+        override fun componentShown(e: ComponentEvent?) {
+            val width = e?.component?.width ?: return
+            taskDescriptionPreview.updateSize(width)
+        }
+
+        override fun componentHidden(e: ComponentEvent?) {}
+    }
+
 
     override fun getDialogPanel(): DialogPanelData {
         val panelName = "MOEVM Checker"
@@ -51,13 +72,13 @@ class AndroidTaskView(
     private fun bindEvents() {
         viewModel.taskDescription
             .onEach { description ->
-                htmlTaskProblemEditor.setHtmlBody(description?.let { convertMarkdownToHtml(description) } ?: "")
+                taskDescriptionPreview.updateText(convertMarkdownToHtml(description ?: ""))
             }
             .launchIn(viewScope)
         viewModel.isDescriptionLoading
             .onEach { isLoading ->
                 loadingProblemSpinner.isVisible = isLoading
-                htmlTaskProblemEditor.isVisible = !isLoading
+                taskDescriptionPreview.isVisible = !isLoading
             }
             .launchIn(viewScope)
 
@@ -75,6 +96,15 @@ class AndroidTaskView(
                         addColorByResult(it.result)
                     }
                 }
+                if (it?.taskResultCode != null) {
+                    textTaskResultCode.showAndSetOrHideAndClearText(
+                        "${it.taskResultCode}, ${
+                            TaskResultCodeEncoder().decode(
+                                it.taskResultCode
+                            )
+                        }"
+                    )
+                }
                 textStdout.showAndSetOrHideAndClearText(it?.stdout)
                 textStderr.showAndSetOrHideAndClearText(it?.stderr)
             }
@@ -89,13 +119,15 @@ class AndroidTaskView(
     }
 
     private fun createDialogPanel() = panel {
-        group(title = "Problem") {
+        group(title = "Задача", indent = false) {
             row {
-                cell(SimpleHtmlPane("").apply {
-                    htmlTaskProblemEditor = this
-                    isEditable = false
+                cell(HtmlTextPreviewPanel()).applyToComponent {
+                    taskDescriptionPreview = this
                     visible(false)
-                })
+                    preferredSize = preferredSize.apply {
+                        height = 400
+                    }
+                }
                 icon(AnimatedIcon.Default()).applyToComponent {
                     loadingProblemSpinner = this
                     visible(true)
@@ -108,7 +140,7 @@ class AndroidTaskView(
             }
         }
 
-        group(title = "Result") {
+        group(title = "Результат") {
             testing = row {
                 icon(AnimatedIcon.Default())
                 label("Проверка решения...")
@@ -116,24 +148,36 @@ class AndroidTaskView(
 
             row {
                 textResult = text("")
-                    .label("Result: ")
+                    .label("Результат: ")
+                    .visible(false)
+            }
+            row {
+                textTaskResultCode = textArea()
+                    .label("Итоговый код проверки: ", position = LabelPosition.TOP)
+                    .align(AlignX.FILL)
                     .visible(false)
             }
             row {
                 textStdout = textArea()
-                    .label("Stdout: ", position = LabelPosition.TOP)
+                    .label("Поток вывода (stdout): ", position = LabelPosition.TOP)
                     .align(AlignX.FILL)
                     .visible(false)
             }
             row {
                 textStderr = textArea()
-                    .label("Stderr: ", position = LabelPosition.TOP)
+                    .label("Поток ошибок (stderr): ", position = LabelPosition.TOP)
                     .align(AlignX.FILL)
                     .visible(false)
             }
         }
     }.apply {
-        border = JBEmptyBorder(12)
+        mainPanel = this
+        addComponentListener(mainPanelComponentListener)
+    }
+
+    override fun destroy() {
+        mainPanel.removeComponentListener(mainPanelComponentListener)
+        super.destroy()
     }
 
     private fun Cell<JTextComponent>.showAndSetOrHideAndClearText(text: String?) {

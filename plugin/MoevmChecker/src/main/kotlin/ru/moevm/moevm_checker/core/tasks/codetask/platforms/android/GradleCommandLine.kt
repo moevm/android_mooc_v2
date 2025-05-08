@@ -12,7 +12,7 @@ import ru.moevm.moevm_checker.core.tasks.codetask.platforms.android.GradleConsta
 
 class GradleCommandLine(
     private val cmd: GeneralCommandLine,
-    private val command: String
+    private val command: String,
 ) {
 
     fun launch(timeoutMs: Int = TASK_TIMEOUT_MS): CodeTaskResult {
@@ -28,8 +28,11 @@ class GradleCommandLine(
         if (!isTaskPassed(stderr, stdout)) {
             return CodeTaskResult(CheckResult.Failed, stdout, stderr)
         }
-
-        return CodeTaskResult(CheckResult.Passed, stdout, stderr)
+        val probablyResultCode = buildString {
+            val lineWithResultCode = stdout.lines().find { it.startsWith("CHECKER: ") } ?: return@buildString
+            append(lineWithResultCode.substringAfter("CHECKER: "))
+        }
+        return CodeTaskResult(CheckResult.Passed, stdout, stderr, probablyResultCode)
     }
 
     private fun isTaskPassed(
