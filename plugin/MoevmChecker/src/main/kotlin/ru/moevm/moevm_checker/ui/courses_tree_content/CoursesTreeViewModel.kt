@@ -36,7 +36,7 @@ class CoursesTreeViewModel @Inject constructor(
     private val isDescriptionLoadingMutable = MutableStateFlow(false)
     val isDescriptionLoading = isDescriptionLoadingMutable.asStateFlow()
     private val descriptionMutable = MutableStateFlow<String?>(null)
-    val taskDescription = descriptionMutable.asStateFlow()
+    val descriptionState = descriptionMutable.asStateFlow()
     private var descriptionLoadingJob: Job? = null
 
     private val shouldTreeRepaintMutable = MutableSharedFlow<List<TreePath>>()
