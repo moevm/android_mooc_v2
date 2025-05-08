@@ -53,9 +53,8 @@ class TaskManagerImpl(
 
     override fun openTask(taskReference: TaskReference): Flow<Unit> = flowSafe {
         val projectDir = projectConfigProvider.rootDir ?: return@flowSafe
-        val (selectedCourse, _) = coursesRepository.findCourseAndTaskByReferenceFlow(taskReference).last() ?: return@flowSafe
-        val taskName = TaskConstants.getTaskFileNameByTaskId(taskReference.taskId)
-        val pathToTask = buildPath(projectDir, selectedCourse.name, taskName)
+        val (selectedCourse, selectedTask) = coursesRepository.findCourseAndTaskByReferenceFlow(taskReference).last() ?: return@flowSafe
+        val pathToTask = buildPath(projectDir, selectedCourse.name, selectedTask.name)
         println("open new task, path = $pathToTask")
         if (File(pathToTask).exists()) {
             ProjectManagerEx.getInstanceEx().openProjectAsync(Path(pathToTask))

@@ -34,9 +34,8 @@ class TaskFileManagerImpl(
             emit(false)
             return@flowSafe
         }
-        val (course, _) = courseAndTask
-        val taskFileName = TaskConstants.getTaskFileNameByTaskId(taskReference.taskId)
-        val taskFolder = File(Utils.buildFilePath(rootDir, course.name, taskFileName))
+        val (course, task) = courseAndTask
+        val taskFolder = File(Utils.buildFilePath(rootDir, course.name, task.name))
         emit(taskFolder.exists() && taskFolder.isDirectory && taskFolder.listFiles()?.isNotEmpty() == true)
     }
 
@@ -54,42 +53,46 @@ class TaskFileManagerImpl(
             return@flowSafe
         }
 
-        val taskFileName = TaskConstants.getTaskFileNameByTaskId(taskReference.taskId)
         val zipArchiveName = TaskConstants.getTaskArchiveNameByTaskId(taskReference.taskId)
-        val outputCourseDir = Utils.buildFilePath(rootDir, course.name)
-        val taskFolder = File(Utils.buildFilePath(rootDir, course.name, taskFileName))
-        if (!taskFolder.exists()) {
-            taskFolder.mkdirs()
+        val outputCourseDirFile = File(rootDir, course.name)
+        if (!outputCourseDirFile.exists()) {
+            outputCourseDirFile.mkdirs()
         }
-            emit(TaskDownloadStatus.DOWNLOADING)
-            val fileStatus = fileDownloader.downloadFile(zipArchiveName, outputCourseDir, URL(task.archiveUrl)).last()
-            var file: File? = null
-            when (fileStatus) {
-                is FileDownloadingStatus.Failed -> {
-                    emit(TaskDownloadStatus.DOWNLOAD_FAILED)
-                    return@flowSafe
-                }
-
-                FileDownloadingStatus.Downloading -> {
-                    emit(TaskDownloadStatus.DOWNLOAD_FAILED)
-                    return@flowSafe
-                }
-
-                is FileDownloadingStatus.Success -> {
-                    file = fileStatus.file
-                }
+        emit(TaskDownloadStatus.DOWNLOADING)
+        val fileStatus =
+            fileDownloader.downloadFile(zipArchiveName, outputCourseDirFile.path, URL(task.archiveUrl)).last()
+        var file: File? = null
+        when (fileStatus) {
+            is FileDownloadingStatus.Failed,
+            is FileDownloadingStatus.Downloading -> {
+                emit(TaskDownloadStatus.DOWNLOAD_FAILED)
+                return@flowSafe
             }
-            emit(TaskDownloadStatus.DOWNLOAD_FINISH)
-            emit(TaskDownloadStatus.UNZIPPING)
-            unzipZipArchive(file, taskFolder.path)
+
+            is FileDownloadingStatus.Success -> {
+                file = fileStatus.file
+            }
+        }
+        emit(TaskDownloadStatus.DOWNLOAD_FINISH)
+        emit(TaskDownloadStatus.UNZIPPING)
+        val outputTaskDirFile = File(outputCourseDirFile.path, task.name)
+        try {
+            unzipZipArchive(file, outputTaskDirFile.path)
+        } catch (e: Exception) {
+            println("unzipping failed, cannot unzip archive")
             file.delete()
-            val taskCodePlatform = TaskCodePlatform.values().find { it.type == task.courseTaskPlatform }
-            if (taskCodePlatform == null) {
-                println("unzipping failed, cannot determinate taskCodePlatform")
-                emit(TaskDownloadStatus.UNZIPPING_FAILED)
-            } else {
-                taskFileLauncherPermissionStrategy.setLauncherAsExecutable(taskCodePlatform, taskFolder)
-                val newTaskFile = File(taskFolder.path, ".task_file")
+            emit(TaskDownloadStatus.UNZIPPING_FAILED)
+            return@flowSafe
+        }
+        file.delete()
+        val taskCodePlatform = TaskCodePlatform.entries.find { it.type == task.courseTaskPlatform }
+        if (taskCodePlatform == null) {
+            println("unzipping failed, cannot determinate taskCodePlatform")
+            emit(TaskDownloadStatus.UNZIPPING_FAILED)
+        } else {
+            taskFileLauncherPermissionStrategy.setLauncherAsExecutable(taskCodePlatform, outputTaskDirFile)
+            val newTaskFile = File(outputTaskDirFile.path, TaskConstants.TASK_FILE_NAME)
+            try {
                 if (newTaskFile.createNewFile()) {
                     if (!newTaskFile.canWrite()) {
                         newTaskFile.setWritable(true)
@@ -102,9 +105,11 @@ class TaskFileManagerImpl(
                 } else {
                     emit(TaskDownloadStatus.UNZIPPING_FAILED)
                 }
-                File(taskFolder.path, ".task_file").createNewFile()
-                emit(TaskDownloadStatus.UNZIPPING_FINISH)
+            } catch (e: Exception) {
+                emit(TaskDownloadStatus.UNZIPPING_FAILED)
             }
+            emit(TaskDownloadStatus.UNZIPPING_FINISH)
+        }
     }
 
     private fun unzipZipArchive(file: File, outputDir: String) {
@@ -136,14 +141,13 @@ class TaskFileManagerImpl(
             )
             return@flowSafe
         }
-        val course = courseAndTask.first
+        val (course, task) = courseAndTask
         val rootDir = projectConfig.rootDir
         if (rootDir == null ) {
             emit(TaskRemoveStatus.FAILED_BEFORE_START)
             return@flowSafe
         }
-        val taskFileName = TaskConstants.getTaskFileNameByTaskId(taskReference.taskId)
-        val taskFolder = File(Utils.buildFilePath(rootDir, course.name, taskFileName))
+        val taskFolder = File(Utils.buildFilePath(rootDir, course.name, task.name))
         emit(TaskRemoveStatus.REMOVING)
         if (taskFolder.deleteRecursively()) {
             emit(TaskRemoveStatus.REMOVE_FINISHED)
