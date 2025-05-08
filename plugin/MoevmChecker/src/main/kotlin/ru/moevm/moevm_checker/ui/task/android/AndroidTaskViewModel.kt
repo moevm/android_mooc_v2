@@ -8,7 +8,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.moevm.moevm_checker.core.controller.CoursesRepository
 import ru.moevm.moevm_checker.core.data.ProjectConfigProvider
-import ru.moevm.moevm_checker.core.tasks.TaskManager
 import ru.moevm.moevm_checker.core.tasks.TaskReference
 import ru.moevm.moevm_checker.core.tasks.TaskResultCodeEncoder
 import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
@@ -24,7 +23,6 @@ import javax.inject.Inject
 class AndroidTaskViewModel @Inject constructor(
     private val projectConfigProvider: ProjectConfigProvider,
     private val coursesRepository: CoursesRepository,
-    private val taskManager: TaskManager,
     @Ui uiDispatcher: CoroutineDispatcher,
     @Io private val ioDispatcher: CoroutineDispatcher,
 ) : BaseViewModel(uiDispatcher) {
@@ -46,7 +44,8 @@ class AndroidTaskViewModel @Inject constructor(
     fun onViewCreated(courseId: String, taskId: String) {
         taskReference = TaskReference(courseId, taskId)
         isDescriptionLoadingMutable.value = true
-        taskManager.getTaskDescription(taskReference)
+        coursesRepository.getTaskDescriptionFlow(taskReference)
+            .flowOn(ioDispatcher)
             .onEach { description ->
                 taskDescriptionMutable.value = description
                 isDescriptionLoadingMutable.value = false

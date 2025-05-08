@@ -59,14 +59,14 @@ class CoursesTreeView(
     private val mainPanelComponentListener = object : ComponentListener {
         override fun componentResized(e: ComponentEvent?) {
             val width = e?.component?.width ?: return
-            courseDescriptionPreview.updateSize(width)
+            descriptionPreview.updateSize(width)
         }
 
         override fun componentMoved(e: ComponentEvent?) {}
 
         override fun componentShown(e: ComponentEvent?) {
             val width = e?.component?.width ?: return
-            courseDescriptionPreview.updateSize(width)
+            descriptionPreview.updateSize(width)
         }
 
         override fun componentHidden(e: ComponentEvent?) {}
@@ -74,7 +74,7 @@ class CoursesTreeView(
 
     /*  UI Components   */
     private lateinit var coursesTree: JTree
-    private lateinit var courseDescriptionPreview: HtmlTextPreviewPanel
+    private lateinit var descriptionPreview: HtmlTextPreviewPanel
     private lateinit var loadingPreviewSpinner: JLabel
     private lateinit var mainPanel: JPanel
 
@@ -100,14 +100,14 @@ class CoursesTreeView(
             }
             .launchIn(viewScope)
 
-        viewModel.taskDescription
+        viewModel.descriptionState
             .onEach { description ->
-                courseDescriptionPreview.updateText(convertMarkdownToHtml(description ?: ""))
+                descriptionPreview.updateText(convertMarkdownToHtml(description ?: ""))
             }
             .launchIn(viewScope)
         viewModel.isDescriptionLoading
             .onEach { isLoading ->
-                courseDescriptionPreview.isVisible = !isLoading
+                descriptionPreview.isVisible = !isLoading
                 loadingPreviewSpinner.isVisible = isLoading
             }.launchIn(viewScope)
     }
@@ -133,7 +133,7 @@ class CoursesTreeView(
                 row {
                     cell(HtmlTextPreviewPanel())
                         .applyToComponent {
-                            courseDescriptionPreview = this
+                            descriptionPreview = this
                             visible(true)
                         }
                         .align(Align.FILL)
