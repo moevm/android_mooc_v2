@@ -113,15 +113,19 @@ class CoursesTreeView(
     }
 
     private fun createDialogPanel(): DialogPanel {
-        val component = JBScrollPane(BaseTreeView(viewModel.coursesTreeModel, contextMenuActionListener).apply {
-            cellRenderer = CoursesTreeCellRender()
-            coursesTree = this
-            coursesTree.apply {
-                showsRootHandles = false
-                addTreeSelectionListener(treeSelectionListener)
-            }
-            isVisible = true
-        }).apply {
+        val component = JBScrollPane(
+            BaseTreeView(viewModel.coursesTreeModel, contextMenuActionListener).apply {
+                cellRenderer = CoursesTreeCellRender()
+                coursesTree = this
+                coursesTree.apply {
+                    showsRootHandles = false
+                    addTreeSelectionListener(treeSelectionListener)
+                }
+                isVisible = true
+            },
+            JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+            JBScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+        ).apply {
             preferredSize = preferredSize.apply { height = COURSES_TREE_HEIGHT }
         }
 
