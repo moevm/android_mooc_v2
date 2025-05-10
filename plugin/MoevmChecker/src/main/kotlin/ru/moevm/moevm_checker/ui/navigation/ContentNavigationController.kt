@@ -4,6 +4,7 @@ import com.intellij.openapi.observable.util.whenDisposed
 import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.content.ContentManager
+import ru.moevm.moevm_checker.core.tasks.TaskReference
 import ru.moevm.moevm_checker.dagger.PluginComponent
 import ru.moevm.moevm_checker.ui.auth_content.AuthView
 import ru.moevm.moevm_checker.ui.courses_tree_content.CoursesTreeView
@@ -58,10 +59,10 @@ class ContentNavigationController(
         contentManager.addContent(content)
     }
 
-    fun setAndroidTaskContent(courseId: String, taskId: String) {
+    fun setAndroidTaskContent(taskReference: TaskReference) {
         mapOfContents.removeContentIf { name -> name == ContentName.TASK }
 
-        val taskView = AndroidTaskView(pluginComponent, courseId, taskId)
+        val taskView = AndroidTaskView(pluginComponent, taskReference)
         val taskViewPanelData = taskView.getDialogPanel()
         val content = ContentFactory.getInstance()
             .createContent(taskViewPanelData.dialogPanel, taskViewPanelData.panelName, /* isLocked = */ false).apply {
@@ -69,6 +70,11 @@ class ContentNavigationController(
             }
         mapOfContents[ContentName.TASK] = content
         contentManager.addContent(content)
+    }
+
+    fun setKotlinTaskContent(taskReference: TaskReference) {
+        // Currently, they didn't have any differences
+        setAndroidTaskContent(taskReference)
     }
 
     private fun MutableMap<ContentName, Content>.removeContentIf(predicate: (key: ContentName) -> Boolean) {

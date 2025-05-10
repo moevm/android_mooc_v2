@@ -3,6 +3,7 @@ package ru.moevm.moevm_checker.dagger
 import dagger.BindsInstance
 import dagger.Component
 import kotlinx.coroutines.CoroutineDispatcher
+import ru.moevm.moevm_checker.core.controller.CoursesRepository
 import ru.moevm.moevm_checker.core.data.ProjectConfigProvider
 import ru.moevm.moevm_checker.ui.auth_content.AuthViewModel
 import ru.moevm.moevm_checker.ui.courses_tree_content.CoursesTreeViewModel
@@ -18,6 +19,8 @@ interface PluginComponent {
     val coursesTreeViewModel: CoursesTreeViewModel
 
     val androidTaskViewModel: AndroidTaskViewModel
+
+    val coursesRepository: CoursesRepository
 
     @Component.Factory
     interface Factory {

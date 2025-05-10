@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.onEach
 import org.intellij.markdown.flavours.commonmark.CommonMarkFlavourDescriptor
 import org.intellij.markdown.html.HtmlGenerator
 import org.intellij.markdown.parser.MarkdownParser
+import ru.moevm.moevm_checker.core.tasks.TaskReference
 import ru.moevm.moevm_checker.core.tasks.TaskResultCodeEncoder
 import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
 import ru.moevm.moevm_checker.core.utils.simpleLazy
@@ -26,8 +27,7 @@ import javax.swing.text.JTextComponent
 
 class AndroidTaskView(
     private val component: PluginComponent,
-    private val courseId: String,
-    private val taskId: String,
+    private val taskReference: TaskReference
 ) : BaseView() {
 
     /*  UI Components   */
@@ -65,7 +65,7 @@ class AndroidTaskView(
         val panelName = "MOEVM Checker"
         val dialogPanel = createScrollableDialogPanel()
         bindEvents()
-        viewModel.onViewCreated(courseId, taskId)
+        viewModel.onViewCreated(taskReference)
         return DialogPanelData(panelName, dialogPanel)
     }
 

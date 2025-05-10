@@ -1,4 +1,4 @@
-package ru.moevm.moevm_checker.core.tasks.codetask.platforms.android
+package ru.moevm.moevm_checker.core.tasks.codetask.platforms.gradle
 
 import com.intellij.execution.ExecutionException
 import com.intellij.execution.configurations.GeneralCommandLine
@@ -7,8 +7,8 @@ import com.intellij.openapi.util.SystemInfo
 import com.intellij.openapi.util.io.FileUtil
 import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
 import ru.moevm.moevm_checker.core.tasks.codetask.CodeTaskResult
-import ru.moevm.moevm_checker.core.tasks.codetask.platforms.android.GradleConstants.GRADLE_WRAPPER_UNIX
-import ru.moevm.moevm_checker.core.tasks.codetask.platforms.android.GradleConstants.GRADLE_WRAPPER_WIN
+import ru.moevm.moevm_checker.core.tasks.codetask.platforms.gradle.GradleConstants.GRADLE_WRAPPER_UNIX
+import ru.moevm.moevm_checker.core.tasks.codetask.platforms.gradle.GradleConstants.GRADLE_WRAPPER_WIN
 
 class GradleCommandLine(
     private val cmd: GeneralCommandLine,
@@ -28,11 +28,7 @@ class GradleCommandLine(
         if (!isTaskPassed(stderr, stdout)) {
             return CodeTaskResult(CheckResult.Failed, stdout, stderr)
         }
-        val probablyResultCode = buildString {
-            val lineWithResultCode = stdout.lines().find { it.startsWith("CHECKER: ") } ?: return@buildString
-            append(lineWithResultCode.substringAfter("CHECKER: "))
-        }
-        return CodeTaskResult(CheckResult.Passed, stdout, stderr, probablyResultCode)
+        return CodeTaskResult(CheckResult.Passed, stdout, stderr)
     }
 
     private fun isTaskPassed(

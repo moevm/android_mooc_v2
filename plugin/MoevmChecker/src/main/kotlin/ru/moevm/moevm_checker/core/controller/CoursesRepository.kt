@@ -17,8 +17,6 @@ interface CoursesRepository {
 
     fun getCourseDescriptionFlow(courseId: String): Flow<String?>
 
-    fun getTaskInfoFlow(taskReference: TaskReference): Flow<CourseTask?>
-
     fun getTaskDescriptionFlow(taskReference: TaskReference): Flow<String?>
 
     fun findCourseAndTaskByReferenceFlow(taskReference: TaskReference): Flow<Pair<Course, CourseTask>?>
@@ -61,14 +59,6 @@ class CoursesRepositoryImpl(
             val result = id?.let { courseId -> googleFilesApi.getDescriptionByLinkParams(id = courseId).string() }
             emit(result)
         }
-    }
-
-    override fun getTaskInfoFlow(taskReference: TaskReference): Flow<CourseTask?> = flowSafe {
-        if (coursesInfoMutableState.value == null) {
-            initRepositoryFlow(false).last()
-        }
-        val task = findTaskByReferenceFlow(taskReference).last()
-        emit(task)
     }
 
     override fun getTaskDescriptionFlow(taskReference: TaskReference): Flow<String?> = flowSafe {

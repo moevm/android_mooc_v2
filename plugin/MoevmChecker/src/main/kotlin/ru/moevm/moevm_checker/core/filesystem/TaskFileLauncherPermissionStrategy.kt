@@ -13,6 +13,9 @@ class TaskFileLauncherPermissionStrategyMacOS: TaskFileLauncherPermissionStrateg
             TaskCodePlatform.ANDROID -> {
                 File(taskFolder.path, "gradlew").setExecutable(true)
             }
+            TaskCodePlatform.KOTLIN -> {
+                File(taskFolder.path, "gradlew").setExecutable(true)
+            }
         }
     }
 }
