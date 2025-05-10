@@ -1,8 +1,8 @@
 package ru.moevm.moevm_checker.ui.task.android
 
-import com.android.tools.idea.appinspection.inspectors.network.view.details.createVerticalScrollPane
 import com.intellij.ui.AnimatedIcon
 import com.intellij.ui.JBColor
+import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.dsl.builder.*
 import kotlinx.coroutines.flow.launchIn
@@ -113,7 +113,7 @@ class AndroidTaskView(
 
     private fun createScrollableDialogPanel() = panel {
         row {
-            cell(createVerticalScrollPane(createDialogPanel()))
+            cell(JBScrollPane(createDialogPanel()))
                 .align(Align.FILL)
         }.resizableRow()
     }

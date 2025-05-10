@@ -12,7 +12,7 @@ class KotlinTaskCodeCheckSystem(
 ): AbstractCodeCheckSystem {
 
     private fun runUnitTests(jdkPath: String, taskFolder: File): CodeTaskResult {
-        val gcl = GradleCommandLine.create(taskFolder.path, jdkPath, "test")
+        val gcl = GradleCommandLine.create(taskFolder.path, jdkPath, "clean", "test")
         return gcl.launch()
     }
 
@@ -28,7 +28,7 @@ class KotlinTaskCodeCheckSystem(
                 "unit_test" -> {
                     val result = runUnitTests(jdkPath, taskFolder)
                     if (result.result is CheckResult.Failed || result.result is CheckResult.Error) {
-                        return result
+                        return CodeTaskResult(result.result, withHiddenCode(result.stdout), result.stderr)
                     }
                     checkResults.add(TaskResult("Unit tests", result))
                 }
@@ -39,19 +39,33 @@ class KotlinTaskCodeCheckSystem(
         return if (checkResults.all { it.taskResult.result is CheckResult.Passed }) {
             CodeTaskResult(
                 CheckResult.Passed,
-                checkResults.joinToString( "\n\n\n") { "${it.arg}:\n\n" + it.taskResult.stdout },
+                extractStdoutAndHideCode(checkResults),
                 checkResults.joinToString("\n\n\n") {
                     if (it.taskResult.stderr.isBlank()) {
                         ""
                     } else {
                         "${it.arg}:\n\n" + it.taskResult.stderr }
                 }.ifBlank { "" },
-                // TODO Проверить
-                checkResults.map { codeCollector.collectCode(it.taskResult.stdout) }.joinToString(separator = "")
+                checkResults.joinToString(separator = "") { codeCollector.collectCode(it.taskResult.stdout).toString() }
             )
         } else {
             CodeTaskResult(CheckResult.Failed, "", "Unknown error")
         }
+    }
+
+    private fun extractStdoutAndHideCode(checkResults: MutableList<TaskResult>): String {
+        return checkResults.joinToString( "\n\n\n") {
+            "${it.arg}:\n\n" + withHiddenCode(it.taskResult.stdout)
+        }
+    }
+
+    private fun withHiddenCode(stdout: String): String {
+        val index = stdout.indexOf("CHECKER")
+        if (index == -1) {
+            return stdout
+        }
+        val indexOfNewLine = stdout.indexOf("\n", index)
+        return stdout.removeRange(index, indexOfNewLine)
     }
 
     inner class TaskResult(

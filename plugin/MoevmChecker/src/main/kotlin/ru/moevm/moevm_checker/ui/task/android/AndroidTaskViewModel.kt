@@ -14,6 +14,7 @@ import ru.moevm.moevm_checker.core.tasks.TaskResultCodeEncoder
 import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
 import ru.moevm.moevm_checker.core.tasks.codetask.CodeTaskFactory
 import ru.moevm.moevm_checker.core.tasks.codetask.TaskCodeEnvironment
+import ru.moevm.moevm_checker.core.tasks.codetask.TaskCodePlatform
 import ru.moevm.moevm_checker.dagger.Io
 import ru.moevm.moevm_checker.dagger.Ui
 import ru.moevm.moevm_checker.ui.BaseViewModel
@@ -89,8 +90,19 @@ class AndroidTaskViewModel @Inject constructor(
     }
 
     private fun startTask(taskDir: String, taskData: CourseTask) {
+        val environment = when (taskData.courseTaskPlatform) {
+            TaskCodePlatform.ANDROID.type -> {
+                TaskCodeEnvironment.Android(File(taskDir), projectConfigProvider.jdkPath)
+            }
+            TaskCodePlatform.KOTLIN.type -> {
+                TaskCodeEnvironment.Kotlin(File(taskDir), projectConfigProvider.jdkPath)
+            }
+            else -> {
+                return
+            }
+        }
         val codeTask = CodeTaskFactory.create(
-            TaskCodeEnvironment.Android(File(taskDir), projectConfigProvider.jdkPath),
+            environment,
             taskData.taskArgs
         )
         val codeTaskResult = codeTask.execute()
