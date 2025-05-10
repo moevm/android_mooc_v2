@@ -1,5 +1,6 @@
 package ru.moevm.moevm_checker.core.tasks.codetask.platforms.kotlin
 
+import ru.moevm.moevm_checker.core.tasks.TaskConstants
 import ru.moevm.moevm_checker.core.tasks.codetask.AbstractCodeCheckSystem
 import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
 import ru.moevm.moevm_checker.core.tasks.codetask.CodeTaskResult
@@ -22,7 +23,6 @@ class KotlinTaskCodeCheckSystem(
         }
         val checkResults = mutableListOf<TaskResult>()
 
-
         for (arg in taskArgs) {
             when (arg) {
                 "unit_test" -> {
@@ -44,7 +44,8 @@ class KotlinTaskCodeCheckSystem(
                     if (it.taskResult.stderr.isBlank()) {
                         ""
                     } else {
-                        "${it.arg}:\n\n" + it.taskResult.stderr }
+                        "${it.arg}:\n\n" + it.taskResult.stderr
+                    }
                 }.ifBlank { "" },
                 checkResults.joinToString(separator = "") { codeCollector.collectCode(it.taskResult.stdout).toString() }
             )
@@ -60,7 +61,7 @@ class KotlinTaskCodeCheckSystem(
     }
 
     private fun withHiddenCode(stdout: String): String {
-        val index = stdout.indexOf("CHECKER")
+        val index = stdout.indexOf(TaskConstants.CHECKER_FLAG)
         if (index == -1) {
             return stdout
         }

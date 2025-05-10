@@ -1,6 +1,7 @@
 package ru.moevm.moevm_checker.core.tasks.codetask.platforms.android
 
 import kotlinx.coroutines.Dispatchers
+import ru.moevm.moevm_checker.core.tasks.TaskConstants
 import ru.moevm.moevm_checker.core.tasks.codetask.AbstractCodeCheckSystem
 import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
 import ru.moevm.moevm_checker.core.tasks.codetask.CodeTaskResult
@@ -30,7 +31,7 @@ class AndroidTaskCodeCheckSystem(
         val logcatCollector = AndroidLogcatCollector()
         if (taskArgs.isNotEmpty()) {
             logcatCollector.start(selector = { line ->
-                line.contains("CHECKER")
+                line.contains(TaskConstants.CHECKER_FLAG)
             }, Dispatchers.IO)
         }
         for (arg in taskArgs) {

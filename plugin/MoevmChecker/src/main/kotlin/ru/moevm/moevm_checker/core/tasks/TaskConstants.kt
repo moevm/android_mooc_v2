@@ -7,6 +7,8 @@ object TaskConstants {
 
     const val TASK_DESCRIPTION_NAME = "task_description.md"
 
+    const val CHECKER_FLAG = "CHECKER"
+
     @JvmStatic
     fun getTaskFileNameByTaskId(taskId: String): String = "task${taskId}"
 
