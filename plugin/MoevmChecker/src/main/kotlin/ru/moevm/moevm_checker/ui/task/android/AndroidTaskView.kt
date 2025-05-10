@@ -113,7 +113,13 @@ class AndroidTaskView(
 
     private fun createScrollableDialogPanel() = panel {
         row {
-            cell(JBScrollPane(createDialogPanel()))
+            cell(
+                JBScrollPane(
+                    createDialogPanel(),
+                    JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                    JBScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+                )
+            )
                 .align(Align.FILL)
         }.resizableRow()
     }
