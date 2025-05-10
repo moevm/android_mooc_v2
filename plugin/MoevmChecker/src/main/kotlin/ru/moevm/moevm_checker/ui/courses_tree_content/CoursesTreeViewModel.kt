@@ -35,7 +35,7 @@ class CoursesTreeViewModel @Inject constructor(
 
     private val isDescriptionLoadingMutable = MutableStateFlow(false)
     val isDescriptionLoading = isDescriptionLoadingMutable.asStateFlow()
-    private val descriptionMutable = MutableStateFlow<String?>(null)
+    private val descriptionMutable = MutableStateFlow<String?>(PLUGIN_DESCRIPTION_TEXT)
     val descriptionState = descriptionMutable.asStateFlow()
     private var descriptionLoadingJob: Job? = null
 
@@ -111,6 +111,11 @@ class CoursesTreeViewModel @Inject constructor(
         descriptionMutable.value = null
         descriptionLoadingJob?.cancel()
         when (newNode) {
+            is RootTreeNode -> {
+                isDescriptionLoadingMutable.value = true
+                descriptionMutable.value = PLUGIN_DESCRIPTION_TEXT
+                isDescriptionLoadingMutable.value = false
+            }
             is CoursesTreeNode -> {
                 isDescriptionLoadingMutable.value = true
                 val courseId = newNode.courseId
@@ -206,5 +211,24 @@ class CoursesTreeViewModel @Inject constructor(
     override fun destroy() {
         nodesInProgress.clearSilently()
         super.destroy()
+    }
+
+    private companion object {
+        private const val PLUGIN_DESCRIPTION_TEXT = "# Добро пожаловать в плагин **Moevm Checker**!\n" +
+                "\n" +
+                "С помощью него вы можете решать задачи прямо из вашей IDE.  \n" +
+                "Для начала:\n" +
+                "\n" +
+                "1. **Выберите** необходимый курс из доступных.\n" +
+                "2. **Скачайте** интересующую задачу.\n" +
+                "3. **Убедитесь**, что у вас подходящая IDE для решения задачи  \n" +
+                "   *(например, для **Kotlin** — это IntelliJ IDEA, а не Android Studio)*.\n" +
+                "4. **Откройте** её и решите.\n" +
+                "\n" +
+                "---\n" +
+                "\n" +
+                "После того, как вы решили задачу, вернитесь в плагин и нажмите **Проверить**.  \n" +
+                "По итогу решения вас будет ждать **код**, который плагин отобразит вам при успешном выполнении задания.  \n" +
+                "**Удачи!** \uD83D\uDE80"
     }
 }
