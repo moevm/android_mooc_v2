@@ -8,11 +8,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.moevm.moevm_checker.core.controller.CoursesRepository
 import ru.moevm.moevm_checker.core.data.ProjectConfigProvider
+import ru.moevm.moevm_checker.core.data.course.CourseTask
 import ru.moevm.moevm_checker.core.tasks.TaskReference
 import ru.moevm.moevm_checker.core.tasks.TaskResultCodeEncoder
 import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
 import ru.moevm.moevm_checker.core.tasks.codetask.CodeTaskFactory
 import ru.moevm.moevm_checker.core.tasks.codetask.TaskCodeEnvironment
+import ru.moevm.moevm_checker.core.tasks.codetask.TaskCodePlatform
 import ru.moevm.moevm_checker.dagger.Io
 import ru.moevm.moevm_checker.dagger.Ui
 import ru.moevm.moevm_checker.ui.BaseViewModel
@@ -41,8 +43,8 @@ class AndroidTaskViewModel @Inject constructor(
     private lateinit var taskReference: TaskReference
     private val resultEncoder = TaskResultCodeEncoder()
 
-    fun onViewCreated(courseId: String, taskId: String) {
-        taskReference = TaskReference(courseId, taskId)
+    fun onViewCreated(taskReference: TaskReference) {
+        this.taskReference = taskReference
         isDescriptionLoadingMutable.value = true
         coursesRepository.getTaskDescriptionFlow(taskReference)
             .flowOn(ioDispatcher)
@@ -79,29 +81,42 @@ class AndroidTaskViewModel @Inject constructor(
                             "",
                         )
                     } else {
-                        val codeTask = CodeTaskFactory.create(
-                            TaskCodeEnvironment.Android(
-                                File(taskDir),
-                                projectConfigProvider.jdkPath
-                            ), taskData.taskArgs
-                        )
-                        val codeTaskResult = codeTask.execute()
-                        taskResultDataMutable.value = TaskResultData(
-                            codeTaskResult.result,
-                            codeTaskResult.stdout,
-                            codeTaskResult.stderr,
-                            codeTaskResult.probablyResultCode?.let {
-                                resultEncoder.encode(
-                                    taskReference,
-                                    timestamp = System.currentTimeMillis(),
-                                    codeTaskResult.probablyResultCode
-                                )
-                            }
-                        )
+                        startTask(taskDir, taskData)
                     }
                     isTestInProgressMutable.value = false
                 }
             }
         }
+    }
+
+    private fun startTask(taskDir: String, taskData: CourseTask) {
+        val environment = when (taskData.courseTaskPlatform) {
+            TaskCodePlatform.ANDROID.type -> {
+                TaskCodeEnvironment.Android(File(taskDir), projectConfigProvider.jdkPath)
+            }
+            TaskCodePlatform.KOTLIN.type -> {
+                TaskCodeEnvironment.Kotlin(File(taskDir), projectConfigProvider.jdkPath)
+            }
+            else -> {
+                return
+            }
+        }
+        val codeTask = CodeTaskFactory.create(
+            environment,
+            taskData.taskArgs
+        )
+        val codeTaskResult = codeTask.execute()
+        taskResultDataMutable.value = TaskResultData(
+            codeTaskResult.result,
+            codeTaskResult.stdout,
+            codeTaskResult.stderr,
+            codeTaskResult.probablyResultCode?.let {
+                resultEncoder.encode(
+                    taskReference,
+                    timestamp = System.currentTimeMillis(),
+                    codeTaskResult.probablyResultCode
+                )
+            }
+        )
     }
 }

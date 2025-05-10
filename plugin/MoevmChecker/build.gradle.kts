@@ -59,8 +59,15 @@ dependencies {
     ksp("com.google.dagger:dagger-compiler:2.50") // Dagger compiler
 
     intellijPlatform {
+        instrumentationTools()
+
+        // Don't forget change META-INF/plugin.xml and remove "org.jetbrains.android"
+
+        // Intellij IDEA
+//        intellijIdeaCommunity("2024.3.1")
+
+        // Android Studio
         androidStudio("2024.3.1.13")
         bundledPlugin("org.jetbrains.android")
-        instrumentationTools()
     }
 }

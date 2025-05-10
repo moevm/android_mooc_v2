@@ -1,15 +1,17 @@
 package ru.moevm.moevm_checker.core.tasks.codetask.platforms.android
 
 import kotlinx.coroutines.Dispatchers
-import ru.moevm.moevm_checker.core.tasks.codetask.AbstractCheckSystem
+import ru.moevm.moevm_checker.core.tasks.TaskConstants
+import ru.moevm.moevm_checker.core.tasks.codetask.AbstractCodeCheckSystem
 import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
 import ru.moevm.moevm_checker.core.tasks.codetask.CodeTaskResult
+import ru.moevm.moevm_checker.core.tasks.codetask.platforms.gradle.GradleCommandLine
 import java.io.File
 
-class AndroidCodeTaskCheckSystem(
+class AndroidTaskCodeCheckSystem(
     private val jdkPath: String?,
     private val taskArgs: List<String>,
-) : AbstractCheckSystem {
+) : AbstractCodeCheckSystem {
 
     private fun runInstrumentalTests(jdkPath: String, taskFolder: File): CodeTaskResult {
         val gcl = GradleCommandLine.create(taskFolder.path, jdkPath, "app:connectedDebugAndroidTest")
@@ -25,11 +27,11 @@ class AndroidCodeTaskCheckSystem(
         if (jdkPath == null) {
             return CodeTaskResult(CheckResult.Error("JDK Not found"), "", "")
         }
-        val checkResults = mutableListOf<Pair<String, CodeTaskResult>>()
-        val logcatCollector = LogcatCollector()
+        val checkResults = mutableListOf<TaskResult>()
+        val logcatCollector = AndroidLogcatCollector()
         if (taskArgs.isNotEmpty()) {
-            logcatCollector.start({ line ->
-                line.contains("CHECKER")
+            logcatCollector.start(selector = { line ->
+                line.contains(TaskConstants.CHECKER_FLAG)
             }, Dispatchers.IO)
         }
         for (arg in taskArgs) {
@@ -39,27 +41,27 @@ class AndroidCodeTaskCheckSystem(
                     if (result.result is CheckResult.Failed || result.result is CheckResult.Error) {
                         return result
                     }
-                    checkResults.add("Unit tests" to result)
+                    checkResults.add(TaskResult("Unit tests", result))
                 }
                 "instrumental_test" -> {
                     val result = runInstrumentalTests(jdkPath, taskFolder)
                     if (result.result is CheckResult.Failed || result.result is CheckResult.Error) {
                         return result
                     }
-                    checkResults.add("Instrumental tests" to result)
+                    checkResults.add(TaskResult("Instrumental tests", result))
                 }
             }
         }
         val probablyResultCode = logcatCollector.collect().lastOrNull()?.takeLastWhile { it != ' ' }
-        return if (checkResults.all { it.second.result is CheckResult.Passed }) {
+        return if (checkResults.all { it.taskResult.result is CheckResult.Passed }) {
             CodeTaskResult(
                 CheckResult.Passed,
-                checkResults.joinToString( "\n\n\n") { "${it.first}:\n\n" + it.second.stdout },
+                checkResults.joinToString( "\n\n\n") { "${it.arg}:\n\n" + it.taskResult.stdout },
                 checkResults.joinToString("\n\n\n") {
-                    if (it.second.stderr.isBlank()) {
+                    if (it.taskResult.stderr.isBlank()) {
                         ""
                     } else {
-                        "${it.first}:\n\n" + it.second.stderr }
+                        "${it.arg}:\n\n" + it.taskResult.stderr }
                 }.ifBlank { "" },
                 probablyResultCode
             )
@@ -67,4 +69,9 @@ class AndroidCodeTaskCheckSystem(
             CodeTaskResult(CheckResult.Failed, "", "Unknown error")
         }
     }
+
+    inner class TaskResult(
+        val arg: String,
+        val taskResult: CodeTaskResult,
+    )
 }

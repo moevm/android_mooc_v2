@@ -1,6 +1,6 @@
-package ru.moevm.moevm_checker.core.tasks.codetask.platforms.android
+package ru.moevm.moevm_checker.core.tasks.codetask.platforms.gradle
 
-object AndroidCheckErrors {
+object GradleCheckErrors {
     private val COMPILATION_ERRORS = listOf("Compilation failed", "Compilation error")
     private val TEST_ERRORS = listOf("Build failed")
 

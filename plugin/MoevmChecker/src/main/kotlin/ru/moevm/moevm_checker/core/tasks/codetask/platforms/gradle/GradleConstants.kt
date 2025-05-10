@@ -1,4 +1,4 @@
-package ru.moevm.moevm_checker.core.tasks.codetask.platforms.android
+package ru.moevm.moevm_checker.core.tasks.codetask.platforms.gradle
 
 object GradleConstants {
     const val BUILD_GRADLE = "build.gradle"

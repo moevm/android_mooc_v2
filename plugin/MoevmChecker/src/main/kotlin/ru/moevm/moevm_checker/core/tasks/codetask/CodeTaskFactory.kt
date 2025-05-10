@@ -1,14 +1,24 @@
 package ru.moevm.moevm_checker.core.tasks.codetask
 
-import ru.moevm.moevm_checker.core.tasks.codetask.platforms.android.AndroidCodeTaskCheckSystem
-import ru.moevm.moevm_checker.core.tasks.codetask.platforms.android.AndroidTask
+import ru.moevm.moevm_checker.core.tasks.codetask.platforms.android.AndroidTaskCodeCheckSystem
+import ru.moevm.moevm_checker.core.tasks.codetask.platforms.kotlin.KotlinTaskCodeCheckSystem
 
 object CodeTaskFactory {
 
     fun create(environment: TaskCodeEnvironment, taskArgs: List<String>): AbstractCodeTask {
         return when (environment) {
             is TaskCodeEnvironment.Android -> {
-                AndroidTask(environment.taskFolder, AndroidCodeTaskCheckSystem(environment.jdkPath, taskArgs))
+                CodeTaskWithCheckSystem(
+                    environment.taskFolder,
+                    AndroidTaskCodeCheckSystem(environment.jdkPath, taskArgs)
+                )
+            }
+
+            is TaskCodeEnvironment.Kotlin -> {
+                CodeTaskWithCheckSystem(
+                    environment.taskFolder,
+                    KotlinTaskCodeCheckSystem(environment.jdkPath, taskArgs)
+                )
             }
         }
     }

@@ -1,12 +1,10 @@
-package ru.moevm.moevm_checker.core.tasks.codetask.platforms.android
+package ru.moevm.moevm_checker.core.tasks.codetask
 
-import ru.moevm.moevm_checker.core.tasks.codetask.AbstractCodeTask
-import ru.moevm.moevm_checker.core.tasks.codetask.CodeTaskResult
 import java.io.File
 
-class AndroidTask(
+class CodeTaskWithCheckSystem(
     override val taskFolder: File,
-    private val checkSystem: AndroidCodeTaskCheckSystem,
+    private val checkSystem: AbstractCodeCheckSystem,
 ) : AbstractCodeTask {
 
     override fun execute(): CodeTaskResult {
