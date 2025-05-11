@@ -5,13 +5,11 @@ import kotlinx.coroutines.flow.last
 import ru.moevm.moevm_checker.core.controller.CoursesRepository
 import ru.moevm.moevm_checker.core.data.ProjectConfigProvider
 import ru.moevm.moevm_checker.core.filesystem.TaskFileLauncherPermissionStrategy
-import ru.moevm.moevm_checker.core.network.downloading.FileDownloader
-import ru.moevm.moevm_checker.core.network.downloading.FileDownloadingStatus
+import ru.moevm.moevm_checker.core.network.FileDownloadingStatus
 import ru.moevm.moevm_checker.core.tasks.codetask.TaskCodePlatform
 import ru.moevm.moevm_checker.core.utils.coroutine.flowSafe
 import ru.moevm.moevm_checker.utils.Utils
 import java.io.File
-import java.net.URL
 import java.util.zip.ZipFile
 
 interface TaskFileManager {
@@ -23,7 +21,6 @@ interface TaskFileManager {
 class TaskFileManagerImpl(
     private val coursesRepository: CoursesRepository,
     private val taskFileLauncherPermissionStrategy: TaskFileLauncherPermissionStrategy,
-    private val fileDownloader: FileDownloader,
     private val projectConfig: ProjectConfigProvider
 ) : TaskFileManager {
 
@@ -53,18 +50,20 @@ class TaskFileManagerImpl(
             return@flowSafe
         }
 
-        val zipArchiveName = TaskConstants.getTaskArchiveNameByTaskId(taskReference.taskId)
         val outputCourseDirFile = File(rootDir, course.name)
         if (!outputCourseDirFile.exists()) {
             outputCourseDirFile.mkdirs()
         }
         emit(TaskDownloadStatus.DOWNLOADING)
         val fileStatus =
-            fileDownloader.downloadFile(zipArchiveName, outputCourseDirFile.path, URL(task.archiveUrl)).last()
-        var file: File? = null
+            coursesRepository.downloadTaskArchiveByLinkFlow(taskReference, outputCourseDirFile.path).last()
+        var file: File?
         when (fileStatus) {
             is FileDownloadingStatus.Failed,
             is FileDownloadingStatus.Downloading -> {
+                if (fileStatus is FileDownloadingStatus.Failed) {
+                    println(fileStatus.message)
+                }
                 emit(TaskDownloadStatus.DOWNLOAD_FAILED)
                 return@flowSafe
             }
@@ -79,7 +78,7 @@ class TaskFileManagerImpl(
         try {
             unzipZipArchive(file, outputTaskDirFile.path)
         } catch (e: Exception) {
-            println("unzipping failed, cannot unzip archive")
+            println(e.message)
             file.delete()
             emit(TaskDownloadStatus.UNZIPPING_FAILED)
             return@flowSafe
@@ -106,6 +105,7 @@ class TaskFileManagerImpl(
                     emit(TaskDownloadStatus.UNZIPPING_FAILED)
                 }
             } catch (e: Exception) {
+                println(e.message)
                 emit(TaskDownloadStatus.UNZIPPING_FAILED)
             }
             emit(TaskDownloadStatus.UNZIPPING_FINISH)

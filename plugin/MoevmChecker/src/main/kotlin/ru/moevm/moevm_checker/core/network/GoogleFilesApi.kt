@@ -3,6 +3,8 @@ package ru.moevm.moevm_checker.core.network
 import okhttp3.ResponseBody
 import retrofit2.http.GET
 import retrofit2.http.Query
+import retrofit2.http.Streaming
+import retrofit2.http.Url
 import ru.moevm.moevm_checker.core.data.course.CoursesInfo
 
 interface GoogleFilesApi {
@@ -14,9 +16,10 @@ interface GoogleFilesApi {
     ): CoursesInfo
 
     // загрузка описания курса или задачи
-    @GET("/uc")
-    suspend fun getDescriptionByLinkParams(
-        @Query("export") export: String = "download",
-        @Query("id") id: String,
-    ): ResponseBody
+    @GET
+    suspend fun getDescriptionByLinkParams(@Url descriptionUrl: String): ResponseBody
+
+    @GET
+    @Streaming
+    suspend fun downloadTaskArchiveByLink(@Url archiveUrl: String): ResponseBody
 }
