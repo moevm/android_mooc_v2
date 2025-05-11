@@ -22,6 +22,7 @@ class ContentNavigationController(
 
     private val mapOfContents = mutableMapOf<ContentName, Content>()
 
+    @Suppress("unused")
     fun setAuthContent() {
         if (mapOfContents.containsKey(ContentName.AUTH)) {
             return

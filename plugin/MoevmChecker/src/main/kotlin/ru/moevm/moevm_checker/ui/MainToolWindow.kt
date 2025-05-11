@@ -61,7 +61,7 @@ class MainToolWindow : ToolWindowFactory {
                     .launchIn(CoroutineScope(Dispatchers.IO))
             }
             else -> {
-                contentNavigationController?.setAuthContent()
+                contentNavigationController?.setCoursesTreeContent()
             }
         }
 
@@ -93,6 +93,7 @@ class MainToolWindow : ToolWindowFactory {
                 val isTaskIdFound = reader.readLine().startsWith(TaskConstants.TASK_ID_FOR_TASK_FILE)
                 isTaskEnvironmentValid = isCourseIdFound && isTaskIdFound
             } catch (e: Exception) {
+                println(e.message)
                 isTaskEnvironmentValid = false
             } finally {
                 reader.close()
