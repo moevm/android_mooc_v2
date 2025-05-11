@@ -8,7 +8,12 @@ import ru.moevm.moevm_checker.core.data.course.CourseTask
 import ru.moevm.moevm_checker.core.data.course.CoursesInfo
 import ru.moevm.moevm_checker.core.utils.coroutine.flowSafe
 import ru.moevm.moevm_checker.core.network.GoogleFilesApi
+import ru.moevm.moevm_checker.core.network.FileDownloadingStatus
+import ru.moevm.moevm_checker.core.tasks.TaskConstants
 import ru.moevm.moevm_checker.core.tasks.TaskReference
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 
 interface CoursesRepository {
     fun initRepositoryFlow(force: Boolean): Flow<Boolean>
@@ -22,6 +27,8 @@ interface CoursesRepository {
     fun findCourseAndTaskByReferenceFlow(taskReference: TaskReference): Flow<Pair<Course, CourseTask>?>
 
     fun findTaskByReferenceFlow(taskReference: TaskReference): Flow<CourseTask?>
+
+    fun downloadTaskArchiveByLinkFlow(taskReference: TaskReference, outputDir: String): Flow<FileDownloadingStatus>
 }
 
 class CoursesRepositoryImpl(
@@ -54,9 +61,8 @@ class CoursesRepositoryImpl(
         }
         val courseDescriptionUrl =
             coursesInfoMutableState.value?.courses?.find { course -> course.id == courseId }?.courseDescriptionUrl
-        val id = courseDescriptionUrl?.substringAfter("id=", "")?.substringBefore("&")
-        if (currentCoroutineContext().isActive) {
-            val result = id?.let { courseId -> googleFilesApi.getDescriptionByLinkParams(id = courseId).string() }
+        if (currentCoroutineContext().isActive && courseDescriptionUrl != null) {
+            val result = googleFilesApi.getDescriptionByLinkParams(courseDescriptionUrl).string()
             emit(result)
         }
     }
@@ -66,9 +72,8 @@ class CoursesRepositoryImpl(
             initRepositoryFlow(false).last()
         }
         val taskDescriptionUrl = findTaskByReferenceFlow(taskReference).single()?.taskDescriptionUrl
-        val id = taskDescriptionUrl?.substringAfter("id=", "")?.substringBefore("&")
-        if (currentCoroutineContext().isActive) {
-            val result = id?.let { taskId -> googleFilesApi.getDescriptionByLinkParams(id = taskId).string() }
+        if (currentCoroutineContext().isActive && taskDescriptionUrl != null) {
+            val result = googleFilesApi.getDescriptionByLinkParams(taskDescriptionUrl).string()
             emit(result)
         }
     }
@@ -95,5 +100,42 @@ class CoursesRepositoryImpl(
         val course = courses?.find { it.id == taskReference.courseId }
         val task = course?.courseTasks?.find { it.id == taskReference.taskId }
         emit(task)
+    }
+
+    override fun downloadTaskArchiveByLinkFlow(
+        taskReference: TaskReference,
+        outputDir: String
+    ): Flow<FileDownloadingStatus> = flowSafe {
+        if (coursesInfoMutableState.value == null) {
+            initRepositoryFlow(false).last()
+        }
+        val task = findTaskByReferenceFlow(taskReference).single()
+        val url = task?.archiveUrl
+        if (url != null) {
+            emit(FileDownloadingStatus.Downloading)
+            var inputStream: InputStream? = null
+            var outputStream: FileOutputStream? = null
+            try {
+                val archiveName = TaskConstants.getTaskArchiveNameByTaskId(taskReference.taskId)
+                val outputFile = File(outputDir, archiveName)
+                inputStream = googleFilesApi.downloadTaskArchiveByLink(url).byteStream()
+                outputStream = FileOutputStream(outputFile)
+
+                val buffer = ByteArray(4096)
+                var bytesRead: Int
+                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                    outputStream.write(buffer, 0, bytesRead)
+                }
+                outputStream.flush()
+                emit(FileDownloadingStatus.Success(file = outputFile))
+            } catch (e: Exception) {
+                emit(FileDownloadingStatus.Failed(message = e.message ?: "Downloading failed"))
+            } finally {
+                inputStream?.close()
+                outputStream?.close()
+            }
+        } else {
+            emit(FileDownloadingStatus.Failed("Task archive URL is null"))
+        }
     }
 }

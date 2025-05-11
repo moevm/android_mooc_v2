@@ -1,4 +1,4 @@
-package ru.moevm.moevm_checker.core.network.downloading
+package ru.moevm.moevm_checker.core.network
 
 import java.io.File
 

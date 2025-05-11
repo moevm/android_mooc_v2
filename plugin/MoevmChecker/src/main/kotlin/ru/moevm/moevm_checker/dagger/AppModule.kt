@@ -12,12 +12,10 @@ import ru.moevm.moevm_checker.core.controller.AuthController
 import ru.moevm.moevm_checker.core.controller.CoursesRepository
 import ru.moevm.moevm_checker.core.controller.CoursesRepositoryImpl
 import ru.moevm.moevm_checker.core.data.ProjectConfigProvider
-import ru.moevm.moevm_checker.core.filesystem.TaskFileLauncherPermissionStrategyMacOS
 import ru.moevm.moevm_checker.core.filesystem.TaskFileLauncherPermissionStrategy
+import ru.moevm.moevm_checker.core.filesystem.TaskFileLauncherPermissionStrategyMacOS
 import ru.moevm.moevm_checker.core.filesystem.TaskFileLauncherPermissionStrategyStub
 import ru.moevm.moevm_checker.core.network.GoogleFilesApi
-import ru.moevm.moevm_checker.core.network.downloading.FileDownloader
-import ru.moevm.moevm_checker.core.network.downloading.FileDownloaderImpl
 import ru.moevm.moevm_checker.core.tasks.TaskFileManager
 import ru.moevm.moevm_checker.core.tasks.TaskFileManagerImpl
 import ru.moevm.moevm_checker.core.tasks.TaskManager
@@ -53,21 +51,13 @@ object AppModule {
     fun provideTaskFileManager(
         coursesRepository: CoursesRepository,
         taskFileLauncherPermissionStrategy: TaskFileLauncherPermissionStrategy,
-        fileDownloader: FileDownloader,
         projectConfig: ProjectConfigProvider,
     ): TaskFileManager {
         return TaskFileManagerImpl(
             coursesRepository,
             taskFileLauncherPermissionStrategy,
-            fileDownloader,
             projectConfig,
         )
-    }
-
-    @Provides
-    @Singleton
-    fun provideFileDownloader(): FileDownloader {
-        return FileDownloaderImpl()
     }
 
     @Provides
