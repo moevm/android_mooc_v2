@@ -18,6 +18,7 @@ import ru.moevm.moevm_checker.ui.HtmlTextPreviewPanel
 import ru.moevm.moevm_checker.ui.courses_tree_content.tree.BaseTreeView
 import ru.moevm.moevm_checker.ui.courses_tree_content.tree.CourseTreeContextMenuActionListener
 import ru.moevm.moevm_checker.ui.courses_tree_content.tree.CoursesTreeCellRender
+import ru.moevm.moevm_checker.utils.PluginLogger
 import java.awt.event.ComponentEvent
 import java.awt.event.ComponentListener
 import javax.swing.JLabel
@@ -84,6 +85,7 @@ class CoursesTreeView(
         val dialogPanel = createDialogPanel()
         bindEvents()
         viewModel.onViewCreated()
+        PluginLogger.d("CoursesTreeView", "onViewCreated")
         return DialogPanelData(panelName, dialogPanel)
     }
 
@@ -133,7 +135,7 @@ class CoursesTreeView(
             row {
                 cell(component).align(Align.FILL)
             }.bottomGap(BottomGap.SMALL)
-            group(title = "Preview", indent = false) {
+            group(title = "Просмотр", indent = false) {
                 row {
                     cell(HtmlTextPreviewPanel())
                         .applyToComponent {
@@ -163,6 +165,7 @@ class CoursesTreeView(
     }
 
     override fun destroy() {
+        PluginLogger.d("CoursesTreeView", "destroy")
         coursesTree.removeTreeSelectionListener(treeSelectionListener)
         mainPanel.removeComponentListener(mainPanelComponentListener)
         super.destroy()

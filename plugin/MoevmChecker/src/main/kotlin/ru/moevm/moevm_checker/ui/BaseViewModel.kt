@@ -6,7 +6,7 @@ import ru.moevm.moevm_checker.core.utils.Destroyable
 open class BaseViewModel(uiDispatcher: CoroutineDispatcher) : Destroyable {
 
     private val job = SupervisorJob()
-    val viewModelScope: CoroutineScope = CoroutineScope(uiDispatcher + job + CoroutineExceptionHandler { _, throwable ->
+    val viewModelScope: CoroutineScope = CoroutineScope(uiDispatcher + job + CoroutineExceptionHandler { context, throwable ->
         throwable.printStackTrace() // Базовый обработчик исключений
     })
 

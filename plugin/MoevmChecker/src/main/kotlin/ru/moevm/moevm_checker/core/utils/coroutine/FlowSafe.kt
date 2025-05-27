@@ -4,18 +4,20 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
-
+import ru.moevm.moevm_checker.utils.PluginLogger
 
 fun <T> flowSafe(body: suspend FlowCollector<T>.() -> Unit) = flow {
     this.body()
-}.catchLog()
+}.catchWithLog()
 
-fun <T> Flow<T>.catchLog(): Flow<T> {
+fun <T> Flow<T>.catchWithLog(catchBody: (e: Throwable) -> Unit = {}): Flow<T> {
     return this.catch { exception ->
-        println(
-            "exception: ${exception.message}\n${
+        PluginLogger.d(
+            "Flow catchLog",
+            "EXCEPTION: ${exception.message}\n${
                 exception.stackTrace.joinToString(separator = "\n")
             }"
         )
+        catchBody(exception)
     }
 }

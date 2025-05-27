@@ -38,17 +38,12 @@ class TaskFileManagerImpl(
 
     override fun downloadTaskFiles(taskReference: TaskReference): Flow<TaskDownloadStatus> = flowSafe {
         val courseAndTask = coursesRepository.findCourseAndTaskByReferenceFlow(taskReference).last()
-        if (courseAndTask == null) {
+        val rootDir = projectConfig.rootDir
+        if (courseAndTask == null || rootDir == null) {
             emit(TaskDownloadStatus.FAILED_BEFORE_START)
             return@flowSafe
         }
         val (course, task) = courseAndTask
-
-        val rootDir = projectConfig.rootDir
-        if (rootDir == null) {
-            emit(TaskDownloadStatus.FAILED_BEFORE_START)
-            return@flowSafe
-        }
 
         val outputCourseDirFile = File(rootDir, course.name)
         if (!outputCourseDirFile.exists()) {
@@ -135,18 +130,14 @@ class TaskFileManagerImpl(
 
     override fun removeTaskFiles(taskReference: TaskReference): Flow<TaskRemoveStatus> = flowSafe {
         val courseAndTask = coursesRepository.findCourseAndTaskByReferenceFlow(taskReference).last()
-        if (courseAndTask == null) {
+        val rootDir = projectConfig.rootDir
+        if (courseAndTask == null || rootDir == null) {
             emit(
                 TaskRemoveStatus.FAILED_BEFORE_START
             )
             return@flowSafe
         }
         val (course, task) = courseAndTask
-        val rootDir = projectConfig.rootDir
-        if (rootDir == null ) {
-            emit(TaskRemoveStatus.FAILED_BEFORE_START)
-            return@flowSafe
-        }
         val taskFolder = File(Utils.buildFilePath(rootDir, course.name, task.name))
         emit(TaskRemoveStatus.REMOVING)
         if (taskFolder.deleteRecursively()) {

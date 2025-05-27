@@ -55,7 +55,7 @@ class CoursesRepositoryImpl(
         emit(coursesInfoMutableState.value)
     }
 
-    override fun getCourseDescriptionFlow(courseId: String): Flow<String?> = flowSafe {
+        override fun getCourseDescriptionFlow(courseId: String): Flow<String?> = flow {
         if (coursesInfoMutableState.value == null) {
             initRepositoryFlow(false).last()
         }
@@ -67,7 +67,7 @@ class CoursesRepositoryImpl(
         }
     }
 
-    override fun getTaskDescriptionFlow(taskReference: TaskReference): Flow<String?> = flowSafe {
+    override fun getTaskDescriptionFlow(taskReference: TaskReference): Flow<String?> = flow {
         if (coursesInfoMutableState.value == null) {
             initRepositoryFlow(false).last()
         }
