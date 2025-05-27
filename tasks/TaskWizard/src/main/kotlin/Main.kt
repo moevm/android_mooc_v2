@@ -51,7 +51,7 @@ fun main(args: Array<String>) {
             println(e.message)
         }
         println(CONTINUE)
-    } while (with(readln()) { this == "y" || this == "Y" || this == "н" || this == "Н" })
+    } while (with(readln()) { this in "yYнН" })
     println(EXIT)
 }
 
@@ -242,7 +242,6 @@ private fun clearEnvForKotlin() {
                 )
             )
     )
-
 
     // step 4 - удаляем кэш сборки и локальные файлы
     File("..", "build").deleteRecursively()

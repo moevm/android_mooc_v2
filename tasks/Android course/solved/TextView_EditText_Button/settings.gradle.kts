@@ -21,4 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "TextView_EditText_Button"
 include(":app")
+include(":checker_lib")
 include(":libs")

@@ -21,4 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "Hello button"
 include(":app")
+include(":checker_lib")
 include(":libs")
