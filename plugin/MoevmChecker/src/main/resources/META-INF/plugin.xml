@@ -27,4 +27,8 @@
         <toolWindow factoryClass="ru.moevm.moevm_checker.ui.MainToolWindow" id="Moevm Checker"/>
 
     </extensions>
+    <applicationListeners>
+        <listener class="ru.moevm.moevm_checker.utils.AppShutdownListener"
+                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
+    </applicationListeners>
 </idea-plugin>

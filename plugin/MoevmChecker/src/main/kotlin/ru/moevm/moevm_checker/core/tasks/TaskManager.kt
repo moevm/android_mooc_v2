@@ -15,6 +15,7 @@ import kotlin.io.path.Path
 
 interface TaskManager {
     fun openTask(taskReference: TaskReference): Flow<Unit>
+    @Suppress("unused")
     fun getTaskDescription(taskReference: TaskReference): Flow<String>
 
     companion object {

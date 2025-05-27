@@ -17,6 +17,7 @@ import ru.moevm.moevm_checker.core.tasks.codetask.TaskCodePlatform
 import ru.moevm.moevm_checker.dagger.DaggerPluginComponent
 import ru.moevm.moevm_checker.dagger.PluginComponent
 import ru.moevm.moevm_checker.ui.navigation.ContentNavigationController
+import ru.moevm.moevm_checker.utils.PluginLogger
 import ru.moevm.moevm_checker.utils.Utils
 import java.io.File
 
@@ -24,11 +25,6 @@ class MainToolWindow : ToolWindowFactory {
 
     private lateinit var pluginComponent: PluginComponent
     private var contentNavigationController: ContentNavigationController? = null
-
-    override fun init(toolWindow: ToolWindow) { // вызывается при создании окна IDE
-        println("MainToolWindow init")
-        super.init(toolWindow)
-    }
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val projectConfig = ProjectConfigProvider(project)
@@ -38,6 +34,7 @@ class MainToolWindow : ToolWindowFactory {
             ioDispatcher = Dispatchers.IO,
             workDispatcher = Dispatchers.Default,
         )
+        startPluginLogger(projectConfig)
         contentNavigationController = ContentNavigationController(
             toolWindow.contentManager,
             pluginComponent,
@@ -61,11 +58,11 @@ class MainToolWindow : ToolWindowFactory {
                     .launchIn(CoroutineScope(Dispatchers.IO))
             }
             else -> {
+                PluginLogger.d("MainToolWindow", "navigation: set course tree")
                 contentNavigationController?.setCoursesTreeContent()
             }
         }
-
-        println("Project is ${project.guessProjectDir()}")
+        PluginLogger.d("MainToolWindow", "Project is ${project.guessProjectDir()}")
     }
 
     private fun openPanelByTaskPlatform(
@@ -74,16 +71,19 @@ class MainToolWindow : ToolWindowFactory {
     ) {
         when (courseTaskPlatform) {
             TaskCodePlatform.ANDROID.type -> {
+                PluginLogger.d("MainToolWindow", "navigation: set ANDROID for $taskReference")
                 contentNavigationController?.setAndroidTaskContent(taskReference)
             }
 
             TaskCodePlatform.KOTLIN.type -> {
+                PluginLogger.d("MainToolWindow", "navigation: set KOTLIN for $taskReference")
                 contentNavigationController?.setKotlinTaskContent(taskReference)
             }
         }
     }
 
     private fun isTaskEnvironmentExisted(path: String): Boolean {
+        PluginLogger.d("MainToolWindow", "isTaskEnvironmentExisted: start checking task environment for $path")
         val taskFile = File(path, TaskConstants.TASK_FILE_NAME)
         return if (Utils.isFileReadable(taskFile)) {
             val reader = taskFile.bufferedReader()
@@ -91,9 +91,11 @@ class MainToolWindow : ToolWindowFactory {
             try {
                 val isCourseIdFound = reader.readLine().startsWith(TaskConstants.COURSE_ID_FOR_TASK_FILE)
                 val isTaskIdFound = reader.readLine().startsWith(TaskConstants.TASK_ID_FOR_TASK_FILE)
+
+                PluginLogger.d("MainToolWindow", "isTaskEnvironmentExisted: check value isCourseIdFound $isCourseIdFound, isTaskIdFound $isTaskIdFound")
                 isTaskEnvironmentValid = isCourseIdFound && isTaskIdFound
             } catch (e: Exception) {
-                println(e.message)
+                PluginLogger.d("MainToolWindow", "isTaskEnvironmentExisted: exception ${e.message}")
                 isTaskEnvironmentValid = false
             } finally {
                 reader.close()
@@ -101,6 +103,7 @@ class MainToolWindow : ToolWindowFactory {
 
             isTaskEnvironmentValid
         } else {
+            PluginLogger.d("MainToolWindow", "isTaskEnvironmentExisted: task file does not exist or not readable")
             false
         }
     }
@@ -111,5 +114,11 @@ class MainToolWindow : ToolWindowFactory {
         val courseId = reader.readLine().drop(TaskConstants.COURSE_ID_FOR_TASK_FILE.length)
         val taskId = reader.readLine().drop(TaskConstants.TASK_ID_FOR_TASK_FILE.length)
         return TaskReference(courseId, taskId)
+    }
+
+    private fun startPluginLogger(projectConfigProvider: ProjectConfigProvider) {
+        projectConfigProvider.rootDir?.let { rootDir ->
+            PluginLogger.setFile(rootDir)
+        }
     }
 }

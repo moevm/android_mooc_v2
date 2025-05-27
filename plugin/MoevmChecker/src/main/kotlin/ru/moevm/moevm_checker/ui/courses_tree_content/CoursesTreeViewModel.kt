@@ -7,6 +7,7 @@ import ru.moevm.moevm_checker.core.data.course.Course
 import ru.moevm.moevm_checker.core.data.course.CourseTask
 import ru.moevm.moevm_checker.core.tasks.*
 import ru.moevm.moevm_checker.core.utils.coroutine.EventSharedFlow
+import ru.moevm.moevm_checker.core.utils.coroutine.catchWithLog
 import ru.moevm.moevm_checker.dagger.Io
 import ru.moevm.moevm_checker.dagger.Ui
 import ru.moevm.moevm_checker.ui.BaseViewModel
@@ -16,6 +17,7 @@ import ru.moevm.moevm_checker.ui.courses_tree_content.tree.node.CoursesTreeNode
 import ru.moevm.moevm_checker.ui.courses_tree_content.tree.node.RootTreeNode
 import ru.moevm.moevm_checker.ui.courses_tree_content.tree.node.TaskTreeNode
 import ru.moevm.moevm_checker.utils.ObservableList
+import ru.moevm.moevm_checker.utils.PluginLogger
 import javax.inject.Inject
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
@@ -71,6 +73,7 @@ class CoursesTreeViewModel @Inject constructor(
         nodesInProgress.addListener(listener)
         viewModelScope.launch {
             // TODO проверять версию репозитория
+            PluginLogger.d("CoursesTreeViewModel", "onViewCreated start getting courses info")
             val listOfCourses = coursesRepository.getCoursesInfoFlow()
                 .flowOn(ioDispatcher)
                 .single()?.courses?.map { course ->
@@ -85,6 +88,7 @@ class CoursesTreeViewModel @Inject constructor(
                             }
                     )
                 } ?: emptyList()
+            PluginLogger.d("CoursesTreeViewModel", "onViewCreated finish getting courses info, received ${listOfCourses.joinToString(prefix = "[", postfix = "]") { it.name }} courses")
             withContext(uiDispatcher) {
                 coursesTreeModel.updateTree(listOfCourses)
             }
@@ -121,8 +125,13 @@ class CoursesTreeViewModel @Inject constructor(
                 val courseId = newNode.courseId
                 descriptionLoadingJob = coursesRepository.getCourseDescriptionFlow(courseId)
                     .flowOn(ioDispatcher)
+                    .catchWithLog { e ->
+                        PluginLogger.d("CoursesTreeViewModel", "course $courseId description update with fail: $e")
+                        descriptionMutable.value = "Не удалось загрузить данные"
+                        isDescriptionLoadingMutable.value = false
+                    }
                     .onEach { description ->
-                        println("course $courseId description updated:\n$description")
+                        PluginLogger.d("CoursesTreeViewModel", "course $courseId description loaded")
                         descriptionMutable.value = description
                         isDescriptionLoadingMutable.value = false
                     }
@@ -133,8 +142,13 @@ class CoursesTreeViewModel @Inject constructor(
                 val taskReference = newNode.taskReference
                 descriptionLoadingJob = coursesRepository.getTaskDescriptionFlow(taskReference)
                     .flowOn(ioDispatcher)
+                    .catchWithLog { e ->
+                        PluginLogger.d("CoursesTreeViewModel", "task with $taskReference description update with fail: $e")
+                        descriptionMutable.value = "Не удалось загрузить данные"
+                        isDescriptionLoadingMutable.value = false
+                    }
                     .onEach { description ->
-                        println("task ${taskReference.taskId} in course\n${taskReference.courseId} description updated: $description")
+                        PluginLogger.d("CoursesTreeViewModel", "task with $taskReference description updated")
                         descriptionMutable.value = description
                         isDescriptionLoadingMutable.value = false
                     }
@@ -147,10 +161,11 @@ class CoursesTreeViewModel @Inject constructor(
     }
 
     fun onOpenTaskClick(taskReference: TaskReference) {
+        PluginLogger.d("CoursesTreeViewModel", "onOpenTaskClick: $taskReference")
         taskManager.openTask(taskReference)
             .flowOn(ioDispatcher)
-            .onEach {
-                println("opening task ${taskReference.taskId} in course ${taskReference.courseId}")
+            .onEach { status ->
+                PluginLogger.d("CoursesTreeViewModel", "task $taskReference opened")
             }
             .launchIn(viewModelScope)
     }
@@ -159,7 +174,7 @@ class CoursesTreeViewModel @Inject constructor(
         taskFileManager.downloadTaskFiles(taskReference)
             .flowOn(ioDispatcher)
             .onEach { status ->
-                println("downloading task ${taskReference.taskId} in course ${taskReference.courseId}, status = $status")
+                PluginLogger.d("CoursesTreeViewModel", "task $taskReference download status: ${status.name}")
                 when (status) {
                     TaskDownloadStatus.DOWNLOADING -> {
                         nodesInProgress.add(taskReference)
@@ -188,7 +203,7 @@ class CoursesTreeViewModel @Inject constructor(
         taskFileManager.removeTaskFiles(taskReference)
             .flowOn(ioDispatcher)
             .onEach { status ->
-                println("removing task ${taskReference.taskId} in course ${taskReference.courseId}, status = $status")
+                PluginLogger.d("CoursesTreeViewModel", "task $taskReference remove status: ${status.name}")
                 when (status) {
                     TaskRemoveStatus.REMOVING -> {
                         nodesInProgress.add(taskReference)
@@ -209,6 +224,7 @@ class CoursesTreeViewModel @Inject constructor(
     }
 
     override fun destroy() {
+        PluginLogger.d("CoursesTreeViewModel", "destroy")
         nodesInProgress.clearSilently()
         super.destroy()
     }
