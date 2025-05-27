@@ -39,6 +39,7 @@ dependencies {
 
     // *** do not remove this dependencies
     implementation(fileTree("libs") { include("*.jar") })
+//    androidTestImplementation(project(":checker_lib"))
     androidTestImplementation(project(":libs"))
     // ***
 

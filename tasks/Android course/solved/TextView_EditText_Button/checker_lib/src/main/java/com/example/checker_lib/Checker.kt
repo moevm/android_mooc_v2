@@ -22,14 +22,17 @@ import io.github.kakaocup.kakao.common.views.KView
 import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
 import org.junit.AfterClass
+import org.junit.FixMethodOrder
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runners.MethodSorters
 
 /**
  * Instrumented test, which will execute on an Android device.
  *
  * See [testing documentation](http://d.android.com/tools/testing).
  */
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 abstract class Checker : TestCase() {
 
     abstract val activityClass: Class<out AppCompatActivity>
