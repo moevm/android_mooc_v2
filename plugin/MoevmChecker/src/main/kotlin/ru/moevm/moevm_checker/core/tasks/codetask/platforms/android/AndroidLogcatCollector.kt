@@ -1,32 +1,25 @@
 package ru.moevm.moevm_checker.core.tasks.codetask.platforms.android
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onCompletion
 
 class AndroidLogcatCollector {
-    private var job: Job? = null
-    var data: MutableList<String> = mutableListOf()
+    var process: Process? = null
 
-    fun start(selector: (String) -> Boolean, dispatcher: CoroutineDispatcher) {
-        job?.cancel()
-        job = CoroutineScope(dispatcher + CoroutineExceptionHandler { _, throwable ->
-            throwable.printStackTrace() // Базовый обработчик исключений
-        }).launch {
-            val processBuilder = ProcessBuilder("adb", "logcat")
-            val process = processBuilder.start()
+    fun start(selector: (String) -> Boolean) = flow {
+        val processBuilder = ProcessBuilder("adb", "logcat")
+        process = processBuilder.start()
 
-            process.inputStream.bufferedReader().use { reader ->
-                while (isActive) {
-                    val line = reader.readLine() ?: break
-                    if (selector(line)) {
-                        data.add(line)
-                    }
+        process?.inputStream?.bufferedReader().use { reader ->
+            reader ?: return@use
+            while (true) {
+                val line = reader.readLine() ?: continue
+                if (selector(line)) {
+                    emit(line)
                 }
             }
         }
-    }
-
-    fun collect(): List<String> {
-        job?.cancel()
-        return data
+    }.onCompletion {
+        process?.destroy()
     }
 }
