@@ -5,7 +5,7 @@ import ru.moevm.moevm_checker.core.tasks.codetask.platforms.kotlin.KotlinTaskCod
 
 object CodeTaskFactory {
 
-    fun create(environment: TaskCodeEnvironment, taskArgs: List<String>): AbstractCodeTask {
+    fun create(environment: TaskCodeEnvironment, taskArgs: List<String>): CodeTaskWithCheckSystem {
         return when (environment) {
             is TaskCodeEnvironment.Android -> {
                 CodeTaskWithCheckSystem(
