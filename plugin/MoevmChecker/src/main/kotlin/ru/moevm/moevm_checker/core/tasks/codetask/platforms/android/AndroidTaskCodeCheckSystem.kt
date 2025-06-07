@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import ru.moevm.moevm_checker.core.tasks.TaskConstants
 import ru.moevm.moevm_checker.core.tasks.codetask.AbstractCodeCheckSystem
 import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
@@ -27,7 +28,7 @@ class AndroidTaskCodeCheckSystem(
         return gcl.launch()
     }
 
-    override fun rutTests(taskFolder: File): CodeTaskResult {
+    override fun runTests(taskFolder: File): CodeTaskResult {
         if (jdkPath == null) {
             return CodeTaskResult(CheckResult.Error("JDK Not found"), "", "")
         }

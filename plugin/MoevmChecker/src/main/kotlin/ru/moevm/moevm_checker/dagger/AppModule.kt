@@ -13,6 +13,7 @@ import ru.moevm.moevm_checker.core.controller.CoursesRepository
 import ru.moevm.moevm_checker.core.controller.CoursesRepositoryImpl
 import ru.moevm.moevm_checker.core.data.ProjectConfigProvider
 import ru.moevm.moevm_checker.core.filesystem.TaskFileLauncherPermissionStrategy
+import ru.moevm.moevm_checker.core.filesystem.TaskFileLauncherPermissionStrategyLinux
 import ru.moevm.moevm_checker.core.filesystem.TaskFileLauncherPermissionStrategyMacOS
 import ru.moevm.moevm_checker.core.filesystem.TaskFileLauncherPermissionStrategyStub
 import ru.moevm.moevm_checker.core.network.GoogleFilesApi
@@ -42,6 +43,7 @@ object AppModule {
     fun provideTaskFileLauncherPermissionStrategy(): TaskFileLauncherPermissionStrategy {
         return when {
             SystemInfo.isMac -> TaskFileLauncherPermissionStrategyMacOS()
+            SystemInfo.isLinux -> TaskFileLauncherPermissionStrategyLinux()
             else -> TaskFileLauncherPermissionStrategyStub
         }
     }

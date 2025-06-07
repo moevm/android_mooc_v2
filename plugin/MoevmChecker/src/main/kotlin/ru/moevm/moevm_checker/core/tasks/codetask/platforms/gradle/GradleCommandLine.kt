@@ -9,8 +9,9 @@ import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
 import ru.moevm.moevm_checker.core.tasks.codetask.CodeTaskResult
 import ru.moevm.moevm_checker.core.tasks.codetask.platforms.gradle.GradleConstants.GRADLE_WRAPPER_UNIX
 import ru.moevm.moevm_checker.core.tasks.codetask.platforms.gradle.GradleConstants.GRADLE_WRAPPER_WIN
+import ru.moevm.moevm_checker.utils.PluginLogger
 
-class GradleCommandLine(
+class GradleCommandLine private constructor(
     private val cmd: GeneralCommandLine,
     private val command: String,
 ) {
@@ -18,8 +19,11 @@ class GradleCommandLine(
     fun launch(timeoutMs: Int = TASK_TIMEOUT_MS): CodeTaskResult {
         val output = try {
             val handler = CapturingProcessHandler(cmd)
+            PluginLogger.di("GradleCommandLine", "pid for ${command}: ${handler.process.pid()}")
+            PluginLogger.d("GradleCommandLine", "checking start")
             handler.runProcess(timeoutMs)
         } catch (e: ExecutionException) {
+            PluginLogger.d("GradleCommandLine", "checking error: ${e.message}")
             return CodeTaskResult(CheckResult.Error("Test launch error"), "", "${e.message}")
         }
 

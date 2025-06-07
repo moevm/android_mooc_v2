@@ -11,13 +11,13 @@ import org.intellij.markdown.flavours.commonmark.CommonMarkFlavourDescriptor
 import org.intellij.markdown.html.HtmlGenerator
 import org.intellij.markdown.parser.MarkdownParser
 import ru.moevm.moevm_checker.core.tasks.TaskReference
-import ru.moevm.moevm_checker.core.tasks.TaskResultCodeEncoder
 import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
 import ru.moevm.moevm_checker.core.utils.simpleLazy
 import ru.moevm.moevm_checker.dagger.PluginComponent
 import ru.moevm.moevm_checker.ui.BaseView
 import ru.moevm.moevm_checker.ui.DialogPanelData
 import ru.moevm.moevm_checker.ui.HtmlTextPreviewPanel
+import ru.moevm.moevm_checker.ui.task.TaskResultData
 import java.awt.event.ComponentEvent
 import java.awt.event.ComponentListener
 import javax.swing.JEditorPane
@@ -89,27 +89,28 @@ class AndroidTaskView(
             .launchIn(viewScope)
 
         viewModel.taskResultData
-            .onEach {
+            .onEach { resultData ->
                 textResult.apply {
-                    showAndSetOrHideAndClearText(it?.result?.toString())
-                    if (it?.result != null) {
-                        addColorByResult(it.result)
+                    showAndSetOrHideAndClearText(resultData?.let { mapTaskResultToText(resultData) })
+                    if (resultData != null) {
+                        addColorByResult(resultData.result)
                     }
                 }
-                if (it?.taskResultCode != null) {
-                    textTaskResultCode.showAndSetOrHideAndClearText(
-                        "${it.taskResultCode}, ${
-                            TaskResultCodeEncoder().decode(
-                                it.taskResultCode
-                            )
-                        }"
-                    )
-                }
-                textStdout.showAndSetOrHideAndClearText(it?.stdout)
-                textStderr.showAndSetOrHideAndClearText(it?.stderr)
+                textTaskResultCode.showAndSetOrHideAndClearText(
+                    resultData?.taskResultCode
+                )
+                textStdout.showAndSetOrHideAndClearText(resultData?.stdout)
+                textStderr.showAndSetOrHideAndClearText(resultData?.stderr)
             }
             .launchIn(viewScope)
     }
+
+    private fun mapTaskResultToText(data: TaskResultData): String =
+        when(data.result) {
+            CheckResult.Failed -> "Неверно"
+            CheckResult.Passed -> "Верно"
+            else -> "Ошибка"
+        }
 
     private fun createScrollableDialogPanel() = panel {
         row {

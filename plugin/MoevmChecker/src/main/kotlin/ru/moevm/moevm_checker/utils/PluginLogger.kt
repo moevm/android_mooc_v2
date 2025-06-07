@@ -1,15 +1,20 @@
 package ru.moevm.moevm_checker.utils
 
-import java.io.BufferedWriter
 import java.io.File
 import java.io.FileOutputStream
+import java.io.Writer
 import java.text.SimpleDateFormat
 import java.util.*
 
+private const val isLogToFileEnabled = true
+
 object PluginLogger {
-    private var loggerFileWriter: BufferedWriter? = null
+    private var loggerFileWriter: Writer? = null
 
     fun setFile(pathToRoot: String) {
+        if (!isLogToFileEnabled) {
+            return
+        }
         val loggerFolder = File(pathToRoot, ".checker").apply {
             if (!exists()) {
                 mkdirs()
@@ -26,16 +31,23 @@ object PluginLogger {
         loggerFileWriter = FileOutputStream(
             loggerFile,
             true,
-        ).bufferedWriter().apply {
+        ).writer().apply {
             appendLine("${getCurrentTime()} -----------------")
         }
     }
 
     fun d(tag: String, msg: String) {
-        loggerFileWriter?.let { writer ->
-            writer.appendLine(buildLogMessage("D", tag, msg))
-            writer.flush()
+        if (isLogToFileEnabled) {
+            loggerFileWriter?.let { writer ->
+                writer.appendLine(buildLogMessage("D", tag, msg))
+                writer.flush()
+            }
         }
+        println(buildLogMessage("D", tag, msg))
+    }
+
+    // Debug inner, no log file
+    fun di(tag: String, msg: String) {
         println(buildLogMessage("D", tag, msg))
     }
 

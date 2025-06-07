@@ -20,6 +20,19 @@ class TaskFileLauncherPermissionStrategyMacOS: TaskFileLauncherPermissionStrateg
     }
 }
 
+class TaskFileLauncherPermissionStrategyLinux: TaskFileLauncherPermissionStrategy {
+    override fun setLauncherAsExecutable(taskCodePlatform: TaskCodePlatform, taskFolder: File) {
+        when (taskCodePlatform) {
+            TaskCodePlatform.ANDROID -> {
+                File(taskFolder.path, "gradlew").setExecutable(true)
+            }
+            TaskCodePlatform.KOTLIN -> {
+                File(taskFolder.path, "gradlew").setExecutable(true)
+            }
+        }
+    }
+}
+
 object TaskFileLauncherPermissionStrategyStub: TaskFileLauncherPermissionStrategy {
     override fun setLauncherAsExecutable(taskCodePlatform: TaskCodePlatform, taskFolder: File) = Unit
 }

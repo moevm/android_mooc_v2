@@ -17,7 +17,7 @@ class KotlinTaskCodeCheckSystem(
         return gcl.launch()
     }
 
-    override fun rutTests(taskFolder: File): CodeTaskResult {
+    override fun runTests(taskFolder: File): CodeTaskResult {
         if (jdkPath == null) {
             return CodeTaskResult(CheckResult.Error("JDK Not found"), "", "")
         }
