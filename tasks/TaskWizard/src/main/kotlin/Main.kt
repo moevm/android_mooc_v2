@@ -1,6 +1,8 @@
 package ru.jengle88
 
 import java.io.File
+import java.io.FileInputStream
+import java.security.MessageDigest
 
 private const val WELCOME = "" +
         "Привет! Я помогу составить тестовое окружение для задачи или очистить его для передачи студенту\n" +
@@ -10,7 +12,8 @@ private const val WELCOME = "" +
 private const val PROBLEM = "" +
         "Напиши число, соответствующее твоей задаче:\n" +
         "1. Подготовить окружение к написанию теста (если вы собираетесь написать тесты)\n" +
-        "2. Убрать окружение для написания тестов (если вы собираетесь загрузить задачу студентам)"
+        "2. Убрать окружение для написания тестов (если вы собираетесь загрузить задачу студентам)\n" +
+        "3. Посчитать SHA-256 хэш для тестовых файлов."
 private const val LANGUAGE = "" +
         "Напиши число, соответствующее твоей платформе:\n" +
         "1. Android\n" +
@@ -21,6 +24,7 @@ private const val EXIT = "Всего доброго!"
 private enum class ProblemType (val type: String) {
     PREPARE_ENV("1"),
     CLEAR_ENV("2"),
+    GENERATE_SHA256("3"),
 }
 private enum class LanguageType (val type: String) {
     ANDROID("1"),
@@ -63,11 +67,17 @@ private fun startWizard(problem: ProblemType, language: LanguageType) {
         problem == ProblemType.CLEAR_ENV && language == LanguageType.ANDROID -> {
             clearEnvForAndroid()
         }
+        problem == ProblemType.GENERATE_SHA256 && language == LanguageType.ANDROID -> {
+            calcSHA256HashForAndroid()
+        }
         problem == ProblemType.PREPARE_ENV && language == LanguageType.KOTLIN -> {
             prepareEnvForKotlin()
         }
         problem == ProblemType.CLEAR_ENV && language == LanguageType.KOTLIN -> {
             clearEnvForKotlin()
+        }
+        problem == ProblemType.GENERATE_SHA256 && language == LanguageType.KOTLIN -> {
+            calcSHA256HashForKotlin()
         }
     }
 }
@@ -163,6 +173,24 @@ private fun clearEnvForAndroid() {
     File("..", "local.properties").delete()
 }
 
+private fun calcSHA256HashForAndroid() {
+    val checkerLibFile = File(buildFilePath("..", "libs", "checker_lib-release.aar"))
+    val instrumentalTestFile = tryGetTestFile(File(buildFilePath("..", "app", "src", "androidTest", "java")), "ExampleInstrumentedTest.kt")
+    val unitTestFile = tryGetTestFile(File(buildFilePath("..", "app", "src", "test", "java")), "ExampleUnitTest.kt")
+    val result = buildList {
+        if (checkerLibFile.exists() && checkerLibFile.isFile) {
+            add("test_archive: ${computeHashCode(checkerLibFile)}")
+        }
+        if (instrumentalTestFile != null && instrumentalTestFile.exists() && instrumentalTestFile.isFile) {
+            add("test_instrumental_launcher: ${computeHashCode(instrumentalTestFile)}")
+        }
+        if (unitTestFile != null && unitTestFile.exists() && unitTestFile.isFile) {
+            add("test_unit_launcher: ${computeHashCode(unitTestFile)}")
+        }
+    }
+    println(result.joinToString("\n"))
+}
+
 private fun prepareEnvForKotlin() {
     // step 1 - копируем checker_lib
     val checkerLib = File(File(".", "prepareEnvForKotlin").path, "checker_lib")
@@ -251,8 +279,64 @@ private fun clearEnvForKotlin() {
     File("..", "local.properties").delete()
 }
 
+private fun calcSHA256HashForKotlin() {
+    val checkerLibFile = File(buildFilePath("..", "libs", "checker_lib-release.jar"))
+    val unitTestFile = File(buildFilePath("..", "src", "test", "kotlin", "Test.kt"))
+    val result = buildList {
+        if (checkerLibFile.exists() && checkerLibFile.isFile) {
+            add("test_archive: ${computeHashCode(checkerLibFile)}")
+        }
+        if (unitTestFile.exists() && unitTestFile.isFile) {
+            add("test_unit_launcher: ${computeHashCode(unitTestFile)}")
+        }
+    }
+    println(result.joinToString("\n"))
+}
+
 private fun String.replaceAll(mapOfReplacing: Map<String, String>): String {
     return mapOfReplacing.entries.fold(this) { acc, s ->
         acc.replace(s.key, s.value)
     }
 }
+
+private fun computeHashCode(file: File): String {
+    val algorithm = "SHA-256"
+    val digest = MessageDigest.getInstance(algorithm)
+    FileInputStream(file).use { fis ->
+        val buffer = ByteArray(1024)
+        var bytesRead: Int
+        while (fis.read(buffer).also { bytesRead = it } != -1) {
+            digest.update(buffer, 0, bytesRead)
+        }
+    }
+    return digest.digest().joinToString("") { "%02x".format(it) }
+}
+
+private fun tryGetTestFile(basePathToTest: File, endpointFileName: String): File? {
+    val pathToTest = basePathToTest
+        .goDeepToDirectoryToSingleFolder() // to com
+        ?.goDeepToDirectoryToSingleFolder() // to example
+        ?.goDeepToDirectoryToSingleFolder() // to <project_name>
+    return if (pathToTest != null && pathToTest.exists() && pathToTest.listFiles().size == 1 && pathToTest.listFiles()
+            .first().name == endpointFileName
+    ) {
+        pathToTest.listFiles().first()
+    } else {
+        null
+    }
+}
+
+private fun File.goDeepToDirectoryToSingleFolder(): File? {
+    return if (this.exists() && this.isDirectory && this.listFiles().size == 1) {
+        File(this.path, this.listFiles().first().name)
+    } else {
+        null
+    }
+}
+
+private fun buildFilePath(vararg pieceOfPath: String): String {
+    return pieceOfPath.fold(".") { prev, new ->
+        File(prev, new).path
+    }
+}
+

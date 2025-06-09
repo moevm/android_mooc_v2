@@ -20,4 +20,6 @@ data class CourseTask(
     val taskDescriptionUrl: String,
     @SerializedName("task_args")
     val taskArgs: List<String>,
+    @SerializedName("task_file_hashes")
+    val taskFileHashes: List<TaskFileHash>,
 )

@@ -12,6 +12,8 @@ import ru.moevm.moevm_checker.core.controller.AuthController
 import ru.moevm.moevm_checker.core.controller.CoursesRepository
 import ru.moevm.moevm_checker.core.controller.CoursesRepositoryImpl
 import ru.moevm.moevm_checker.core.data.ProjectConfigProvider
+import ru.moevm.moevm_checker.core.filesystem.HashFileVerificator
+import ru.moevm.moevm_checker.core.filesystem.HashFileVerificatorSHA256
 import ru.moevm.moevm_checker.core.filesystem.TaskFileLauncherPermissionStrategy
 import ru.moevm.moevm_checker.core.filesystem.TaskFileLauncherPermissionStrategyLinux
 import ru.moevm.moevm_checker.core.filesystem.TaskFileLauncherPermissionStrategyMacOS
@@ -60,6 +62,12 @@ object AppModule {
             taskFileLauncherPermissionStrategy,
             projectConfig,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideHashFileVerificator(): HashFileVerificator {
+        return HashFileVerificatorSHA256()
     }
 
     @Provides

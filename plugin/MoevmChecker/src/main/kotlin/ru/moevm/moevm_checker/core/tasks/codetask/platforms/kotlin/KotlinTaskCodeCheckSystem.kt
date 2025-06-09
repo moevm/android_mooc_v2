@@ -4,12 +4,14 @@ import ru.moevm.moevm_checker.core.tasks.TaskConstants
 import ru.moevm.moevm_checker.core.tasks.codetask.AbstractCodeCheckSystem
 import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
 import ru.moevm.moevm_checker.core.tasks.codetask.CodeTaskResult
+import ru.moevm.moevm_checker.core.tasks.codetask.platforms.android.TaskFilesHashVerificator
 import ru.moevm.moevm_checker.core.tasks.codetask.platforms.gradle.GradleCommandLine
 import java.io.File
 
 class KotlinTaskCodeCheckSystem(
     private val jdkPath: String?,
     private val taskArgs: List<String>,
+    private val verificator: TaskFilesHashVerificator,
 ): AbstractCodeCheckSystem {
 
     private fun runUnitTests(jdkPath: String, taskFolder: File): CodeTaskResult {
@@ -21,6 +23,16 @@ class KotlinTaskCodeCheckSystem(
         if (jdkPath == null) {
             return CodeTaskResult(CheckResult.Error("JDK Not found"), "", "")
         }
+        if (!verificator.verify(taskFolder)) {
+            return CodeTaskResult(
+                CheckResult.Error("Ошибка тестов"),
+                "Не удалось подтвердить подлинность тестовых файлов.\n" +
+                        "Если вы модифицировали файлы тестов задачи - уберите изменения и перезапустите проверку.\n" +
+                        "Если нет - загрузите задачу снова или обратитесь к составителям.",
+                "",
+            )
+        }
+
         val checkResults = mutableListOf<TaskResult>()
 
         for (arg in taskArgs) {

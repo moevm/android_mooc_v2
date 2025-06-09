@@ -43,6 +43,10 @@ tasks {
     publishPlugin {
         token.set(System.getenv("PUBLISH_TOKEN"))
     }
+
+    test {
+        useJUnitPlatform()
+    }
 }
 
 dependencies {
@@ -57,6 +61,8 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.google.dagger:dagger:2.50")
     ksp("com.google.dagger:dagger-compiler:2.50") // Dagger compiler
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
 
     intellijPlatform {
         instrumentationTools()
