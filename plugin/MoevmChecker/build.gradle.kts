@@ -67,8 +67,7 @@ dependencies {
     intellijPlatform {
         instrumentationTools()
 
-        // Don't forget change META-INF/plugin.xml and remove "org.jetbrains.android"
-
+        // if you build for Intellij IDEA - don't forget change META-INF/plugin.xml: remove "org.jetbrains.android"
         // Intellij IDEA
 //        intellijIdeaCommunity("2024.3.1")
 

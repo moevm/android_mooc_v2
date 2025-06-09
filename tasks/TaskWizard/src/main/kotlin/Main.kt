@@ -178,12 +178,15 @@ private fun calcSHA256HashForAndroid() {
     val instrumentalTestFile = tryGetTestFile(File(buildFilePath("..", "app", "src", "androidTest", "java")), "ExampleInstrumentedTest.kt")
     val unitTestFile = tryGetTestFile(File(buildFilePath("..", "app", "src", "test", "java")), "ExampleUnitTest.kt")
     val result = buildList {
+        println("Check checkerLib ${checkerLibFile.absolutePath}")
         if (checkerLibFile.exists() && checkerLibFile.isFile) {
             add("test_archive: ${computeHashCode(checkerLibFile)}")
         }
+        println("Check instrumental-test ${instrumentalTestFile?.absolutePath}")
         if (instrumentalTestFile != null && instrumentalTestFile.exists() && instrumentalTestFile.isFile) {
             add("test_instrumental_launcher: ${computeHashCode(instrumentalTestFile)}")
         }
+        println("Check unit-test ${unitTestFile?.absolutePath}")
         if (unitTestFile != null && unitTestFile.exists() && unitTestFile.isFile) {
             add("test_unit_launcher: ${computeHashCode(unitTestFile)}")
         }
@@ -283,9 +286,11 @@ private fun calcSHA256HashForKotlin() {
     val checkerLibFile = File(buildFilePath("..", "libs", "checker_lib-release.jar"))
     val unitTestFile = File(buildFilePath("..", "src", "test", "kotlin", "Test.kt"))
     val result = buildList {
+        println("Check checkerLib ${checkerLibFile.absolutePath}")
         if (checkerLibFile.exists() && checkerLibFile.isFile) {
             add("test_archive: ${computeHashCode(checkerLibFile)}")
         }
+        println("Check unit-test ${unitTestFile.absolutePath}")
         if (unitTestFile.exists() && unitTestFile.isFile) {
             add("test_unit_launcher: ${computeHashCode(unitTestFile)}")
         }
@@ -313,25 +318,12 @@ private fun computeHashCode(file: File): String {
 }
 
 private fun tryGetTestFile(basePathToTest: File, endpointFileName: String): File? {
-    val pathToTest = basePathToTest
-        .goDeepToDirectoryToSingleFolder() // to com
-        ?.goDeepToDirectoryToSingleFolder() // to example
-        ?.goDeepToDirectoryToSingleFolder() // to <project_name>
-    return if (pathToTest != null && pathToTest.exists() && pathToTest.listFiles().size == 1 && pathToTest.listFiles()
-            .first().name == endpointFileName
-    ) {
-        pathToTest.listFiles().first()
-    } else {
-        null
+    basePathToTest.walkTopDown().forEach { file ->
+        if (file.isFile && file.name == endpointFileName) {
+            return file
+        }
     }
-}
-
-private fun File.goDeepToDirectoryToSingleFolder(): File? {
-    return if (this.exists() && this.isDirectory && this.listFiles().size == 1) {
-        File(this.path, this.listFiles().first().name)
-    } else {
-        null
-    }
+    return null
 }
 
 private fun buildFilePath(vararg pieceOfPath: String): String {

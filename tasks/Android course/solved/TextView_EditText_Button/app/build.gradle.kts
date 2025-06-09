@@ -40,6 +40,7 @@ dependencies {
     // *** do not remove this dependencies
     implementation(fileTree("libs") { include("*.jar") })
     androidTestImplementation(project(":libs"))
+//    androidTestImplementation(project(":checker_lib"))
     // ***
 
     implementation("androidx.core:core-ktx:1.9.0")

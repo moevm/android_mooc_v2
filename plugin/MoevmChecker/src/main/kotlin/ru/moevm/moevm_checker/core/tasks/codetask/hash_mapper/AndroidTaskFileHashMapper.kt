@@ -3,7 +3,6 @@ package ru.moevm.moevm_checker.core.tasks.codetask.hash_mapper
 import ru.moevm.moevm_checker.core.data.course.HashFileSource
 import ru.moevm.moevm_checker.core.data.course.TaskFileHash
 import ru.moevm.moevm_checker.core.filesystem.HashFileVerificator
-import ru.moevm.moevm_checker.core.tasks.codetask.hash_mapper.TaskFileHashHelper.goDeepToDirectoryToSingleFolder
 import ru.moevm.moevm_checker.utils.Utils
 import java.io.File
 
@@ -50,16 +49,11 @@ class AndroidTaskFileHashMapper : TaskFileHashMapper {
     }
 
     private fun tryGetTestFile(basePathToTest: File, endpointFileName: String): File? {
-        val pathToTest = basePathToTest
-            .goDeepToDirectoryToSingleFolder() // to com
-            ?.goDeepToDirectoryToSingleFolder() // to example
-            ?.goDeepToDirectoryToSingleFolder() // to <project_name>
-        return if (pathToTest != null && pathToTest.exists() && pathToTest.listFiles().size == 1 && pathToTest.listFiles()
-                .first().name == endpointFileName
-        ) {
-            pathToTest.listFiles().first()
-        } else {
-            null
+        basePathToTest.walkTopDown().forEach { file ->
+            if (file.isFile && file.name == endpointFileName) {
+                return file
+            }
         }
+        return null
     }
 }
