@@ -1,5 +1,8 @@
 package ru.moevm.moevm_checker.ui
 
+import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder
+import com.intellij.openapi.externalSystem.model.ProjectSystemId
+import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.wm.ToolWindow
@@ -10,6 +13,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.swing.Swing
 import kotlinx.coroutines.withContext
+import org.jetbrains.annotations.NonNls
 import ru.moevm.moevm_checker.core.data.ProjectConfigProvider
 import ru.moevm.moevm_checker.core.tasks.TaskConstants
 import ru.moevm.moevm_checker.core.tasks.TaskReference
@@ -34,7 +38,6 @@ class MainToolWindow : ToolWindowFactory {
             ioDispatcher = Dispatchers.IO,
             workDispatcher = Dispatchers.Default,
         )
-        startPluginLogger(projectConfig)
         contentNavigationController = ContentNavigationController(
             toolWindow.contentManager,
             pluginComponent,
@@ -43,7 +46,7 @@ class MainToolWindow : ToolWindowFactory {
         // TODO: добавить предзагрузку данных пользователя вместо авторизации?
         val rootDir = projectConfig.rootDir
         when {
-            rootDir != null && isTaskEnvironmentExisted(rootDir) -> {
+            rootDir != null && Utils.isTaskEnvironmentExisted(rootDir) -> {
                 val taskReference = extractCourseIdAndTaskId(rootDir)
                 val coursesRepository = pluginComponent.coursesRepository
 
@@ -52,7 +55,7 @@ class MainToolWindow : ToolWindowFactory {
                     .onEach { task ->
                         val courseTaskPlatform = task?.courseTaskPlatform
                         withContext(Dispatchers.Swing) {
-                            openPanelByTaskPlatform(courseTaskPlatform, taskReference)
+                            openPanelByTaskPlatform(project, courseTaskPlatform, taskReference)
                         }
                     }
                     .launchIn(CoroutineScope(Dispatchers.IO))
@@ -66,46 +69,34 @@ class MainToolWindow : ToolWindowFactory {
     }
 
     private fun openPanelByTaskPlatform(
+        project: Project,
         courseTaskPlatform: String?,
         taskReference: TaskReference
     ) {
+        val projectPath = project.guessProjectDir()?.path ?: return
         when (courseTaskPlatform) {
             TaskCodePlatform.ANDROID.type -> {
                 PluginLogger.d("MainToolWindow", "navigation: set ANDROID for $taskReference")
                 contentNavigationController?.setAndroidTaskContent(taskReference)
+                syncGradle(projectPath, project)
             }
 
             TaskCodePlatform.KOTLIN.type -> {
                 PluginLogger.d("MainToolWindow", "navigation: set KOTLIN for $taskReference")
                 contentNavigationController?.setKotlinTaskContent(taskReference)
+                syncGradle(projectPath, project)
             }
         }
     }
 
-    private fun isTaskEnvironmentExisted(path: String): Boolean {
-        PluginLogger.d("MainToolWindow", "isTaskEnvironmentExisted: start checking task environment for $path")
-        val taskFile = File(path, TaskConstants.TASK_FILE_NAME)
-        return if (Utils.isFileReadable(taskFile)) {
-            val reader = taskFile.bufferedReader()
-            var isTaskEnvironmentValid: Boolean
-            try {
-                val isCourseIdFound = reader.readLine().startsWith(TaskConstants.COURSE_ID_FOR_TASK_FILE)
-                val isTaskIdFound = reader.readLine().startsWith(TaskConstants.TASK_ID_FOR_TASK_FILE)
-
-                PluginLogger.d("MainToolWindow", "isTaskEnvironmentExisted: check value isCourseIdFound $isCourseIdFound, isTaskIdFound $isTaskIdFound")
-                isTaskEnvironmentValid = isCourseIdFound && isTaskIdFound
-            } catch (e: Exception) {
-                PluginLogger.d("MainToolWindow", "isTaskEnvironmentExisted: exception ${e.message}")
-                isTaskEnvironmentValid = false
-            } finally {
-                reader.close()
-            }
-
-            isTaskEnvironmentValid
-        } else {
-            PluginLogger.d("MainToolWindow", "isTaskEnvironmentExisted: task file does not exist or not readable")
-            false
-        }
+    private fun syncGradle(
+        projectPath: @NonNls String,
+        project: Project
+    ) {
+        ExternalSystemUtil.refreshProject(
+            projectPath,
+            ImportSpecBuilder(project, GRADLE_ID)
+        )
     }
 
     private fun extractCourseIdAndTaskId(path: String): TaskReference {
@@ -116,9 +107,6 @@ class MainToolWindow : ToolWindowFactory {
         return TaskReference(courseId, taskId)
     }
 
-    private fun startPluginLogger(projectConfigProvider: ProjectConfigProvider) {
-        projectConfigProvider.rootDir?.let { rootDir ->
-            PluginLogger.setFile(rootDir)
-        }
-    }
 }
+
+private val GRADLE_ID = ProjectSystemId("GRADLE")
