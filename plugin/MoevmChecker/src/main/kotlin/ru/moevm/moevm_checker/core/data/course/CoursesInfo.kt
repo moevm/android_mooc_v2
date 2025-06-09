@@ -6,6 +6,4 @@ import com.google.gson.annotations.SerializedName
 data class CoursesInfo(
     @SerializedName("courses")
     val courses: List<Course>,
-    @SerializedName("version")
-    val version: String
 )
