@@ -43,6 +43,10 @@ tasks {
     publishPlugin {
         token.set(System.getenv("PUBLISH_TOKEN"))
     }
+
+    test {
+        useJUnitPlatform()
+    }
 }
 
 dependencies {
@@ -58,11 +62,12 @@ dependencies {
     implementation("com.google.dagger:dagger:2.50")
     ksp("com.google.dagger:dagger-compiler:2.50") // Dagger compiler
 
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+
     intellijPlatform {
         instrumentationTools()
 
-        // Don't forget change META-INF/plugin.xml and remove "org.jetbrains.android"
-
+        // if you build for Intellij IDEA - don't forget change META-INF/plugin.xml: remove "org.jetbrains.android"
         // Intellij IDEA
 //        intellijIdeaCommunity("2024.3.1")
 

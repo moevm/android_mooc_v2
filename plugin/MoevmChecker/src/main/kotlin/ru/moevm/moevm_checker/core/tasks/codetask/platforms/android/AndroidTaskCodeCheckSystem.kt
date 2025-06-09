@@ -4,7 +4,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.launch
 import ru.moevm.moevm_checker.core.tasks.TaskConstants
 import ru.moevm.moevm_checker.core.tasks.codetask.AbstractCodeCheckSystem
 import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
@@ -16,6 +15,7 @@ import java.io.File
 class AndroidTaskCodeCheckSystem(
     private val jdkPath: String?,
     private val taskArgs: List<String>,
+    private val verificator: TaskFilesHashVerificator,
 ) : AbstractCodeCheckSystem {
 
     private fun runInstrumentalTests(jdkPath: String, taskFolder: File): CodeTaskResult {
@@ -30,7 +30,16 @@ class AndroidTaskCodeCheckSystem(
 
     override fun runTests(taskFolder: File): CodeTaskResult {
         if (jdkPath == null) {
-            return CodeTaskResult(CheckResult.Error("JDK Not found"), "", "")
+            return CodeTaskResult(CheckResult.Error("JDK не найден"), "", "")
+        }
+        if (!verificator.verify(taskFolder)) {
+            return CodeTaskResult(
+                CheckResult.Error("Ошибка тестов"),
+                "Не удалось подтвердить подлинность тестовых файлов.\n" +
+                        "Если вы модифицировали файлы тестов задачи - уберите изменения и перезапустите проверку.\n" +
+                        "Если нет - загрузите задачу снова или обратитесь к составителям.",
+                "",
+            )
         }
         val checkResults = mutableListOf<TaskResult>()
         val logcatCollector = AndroidLogcatCollector()

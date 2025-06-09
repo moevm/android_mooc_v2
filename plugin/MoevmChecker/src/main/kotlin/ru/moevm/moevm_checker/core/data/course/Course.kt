@@ -12,6 +12,4 @@ data class Course(
     val name: String,
     @SerializedName("tasks")
     val courseTasks: List<CourseTask>,
-    @SerializedName("version")
-    val version: String
 )

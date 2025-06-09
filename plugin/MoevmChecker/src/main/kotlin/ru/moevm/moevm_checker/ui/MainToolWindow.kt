@@ -1,7 +1,10 @@
 package ru.moevm.moevm_checker.ui
 
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder
 import com.intellij.openapi.externalSystem.model.ProjectSystemId
+import com.intellij.openapi.externalSystem.service.project.manage.ExternalProjectsManager
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
@@ -12,12 +15,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.swing.Swing
-import kotlinx.coroutines.withContext
 import org.jetbrains.annotations.NonNls
 import ru.moevm.moevm_checker.core.data.ProjectConfigProvider
 import ru.moevm.moevm_checker.core.tasks.TaskConstants
 import ru.moevm.moevm_checker.core.tasks.TaskReference
 import ru.moevm.moevm_checker.core.tasks.codetask.TaskCodePlatform
+import ru.moevm.moevm_checker.core.utils.coroutine.catchWithLog
 import ru.moevm.moevm_checker.dagger.DaggerPluginComponent
 import ru.moevm.moevm_checker.dagger.PluginComponent
 import ru.moevm.moevm_checker.ui.navigation.ContentNavigationController
@@ -54,9 +57,12 @@ class MainToolWindow : ToolWindowFactory {
                 coursesRepository.findTaskByReferenceFlow(taskReference)
                     .onEach { task ->
                         val courseTaskPlatform = task?.courseTaskPlatform
-                        withContext(Dispatchers.Swing) {
+                        ApplicationManager.getApplication().invokeLater({
                             openPanelByTaskPlatform(project, courseTaskPlatform, taskReference)
-                        }
+                        }, ModalityState.defaultModalityState())
+                    }
+                    .catchWithLog { t ->
+                        PluginLogger.d("createToolWindowContent", "try openPanelByTaskPlatform, t = $t")
                     }
                     .launchIn(CoroutineScope(Dispatchers.IO))
             }
@@ -78,25 +84,39 @@ class MainToolWindow : ToolWindowFactory {
             TaskCodePlatform.ANDROID.type -> {
                 PluginLogger.d("MainToolWindow", "navigation: set ANDROID for $taskReference")
                 contentNavigationController?.setAndroidTaskContent(taskReference)
-                syncGradle(projectPath, project)
+                if (!project.isInitialized) {
+                    PluginLogger.d("MainToolWindow", "project is not initialized, start refresh")
+                    refreshProjectData(projectPath, project)
+                } else {
+                    PluginLogger.d("MainToolWindow", "project is initialized")
+                }
             }
 
             TaskCodePlatform.KOTLIN.type -> {
                 PluginLogger.d("MainToolWindow", "navigation: set KOTLIN for $taskReference")
                 contentNavigationController?.setKotlinTaskContent(taskReference)
-                syncGradle(projectPath, project)
+                if (!project.isInitialized) {
+                    PluginLogger.d("MainToolWindow", "project is not initialized, start refresh")
+                    refreshProjectData(projectPath, project)
+                } else {
+                    PluginLogger.d("MainToolWindow", "project is initialized")
+                }
             }
         }
     }
 
-    private fun syncGradle(
+    private fun refreshProjectData(
         projectPath: @NonNls String,
         project: Project
     ) {
-        ExternalSystemUtil.refreshProject(
-            projectPath,
-            ImportSpecBuilder(project, GRADLE_ID)
-        )
+        ExternalProjectsManager.getInstance(project).runWhenInitialized {
+            ApplicationManager.getApplication().invokeLater({
+                ExternalSystemUtil.refreshProject(
+                    projectPath,
+                    ImportSpecBuilder(project, GRADLE_ID)
+                )
+            }, ModalityState.defaultModalityState())
+        }
     }
 
     private fun extractCourseIdAndTaskId(path: String): TaskReference {

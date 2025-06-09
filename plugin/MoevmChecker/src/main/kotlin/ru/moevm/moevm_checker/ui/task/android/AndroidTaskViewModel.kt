@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import ru.moevm.moevm_checker.core.controller.CoursesRepository
 import ru.moevm.moevm_checker.core.data.ProjectConfigProvider
 import ru.moevm.moevm_checker.core.data.course.CourseTask
+import ru.moevm.moevm_checker.core.filesystem.HashFileVerificator
 import ru.moevm.moevm_checker.core.tasks.TaskReference
 import ru.moevm.moevm_checker.core.tasks.TaskResultCodeEncoder
 import ru.moevm.moevm_checker.core.tasks.codetask.CheckResult
@@ -26,6 +27,7 @@ import javax.inject.Inject
 class AndroidTaskViewModel @Inject constructor(
     private val projectConfigProvider: ProjectConfigProvider,
     private val coursesRepository: CoursesRepository,
+    private val hashFileVerificator: HashFileVerificator,
     @Ui uiDispatcher: CoroutineDispatcher,
     @Io private val ioDispatcher: CoroutineDispatcher,
 ) : BaseViewModel(uiDispatcher) {
@@ -118,7 +120,9 @@ class AndroidTaskViewModel @Inject constructor(
         }
         val codeTask = CodeTaskFactory.create(
             environment,
-            taskData.taskArgs
+            taskData.taskArgs,
+            hashFileVerificator,
+            taskData.taskFileHashes,
         )
         PluginLogger.d("TaskViewModel", "startTask codeTask created")
         val codeTaskResult = codeTask.execute()

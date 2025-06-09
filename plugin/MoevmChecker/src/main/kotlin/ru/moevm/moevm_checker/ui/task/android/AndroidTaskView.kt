@@ -95,12 +95,20 @@ class AndroidTaskView(
                     if (resultData != null) {
                         addColorByResult(resultData.result)
                     }
+                    component.caretPosition = 0
                 }
-                textTaskResultCode.showAndSetOrHideAndClearText(
-                    resultData?.taskResultCode
-                )
-                textStdout.showAndSetOrHideAndClearText(resultData?.stdout)
-                textStderr.showAndSetOrHideAndClearText(resultData?.stderr)
+                textTaskResultCode.apply {
+                    showAndSetOrHideAndClearText(resultData?.taskResultCode)
+                    component.caretPosition = 0
+                }
+                textStdout.apply {
+                    showAndSetOrHideAndClearText(resultData?.stdout)
+                    component.caretPosition = 0
+                }
+                textStderr.apply {
+                    showAndSetOrHideAndClearText(resultData?.stderr)
+                    component.caretPosition = 0
+                }
             }
             .launchIn(viewScope)
     }
